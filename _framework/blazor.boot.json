@@ -1,10 +1,10 @@
 {
   "mainAssemblyName": "DiegoG.Finance.Blazor",
   "resources": {
-    "hash": "sha256-hDpV05RyPx13Lhx0FQS1Wcx3Jr0a/ae3P2s23yr99Ws=",
+    "hash": "sha256-mYBEsE1w+jeUlzPRtmuXYWiKoPhpsZ8re7sfCRBn3aM=",
     "fingerprinting": {
-      "DiegoG.Finance.Blazor.wm70tm4g7x.wasm": "DiegoG.Finance.Blazor.wasm",
-      "DiegoG.Finance.st7rjvqm47.wasm": "DiegoG.Finance.wasm",
+      "DiegoG.Finance.Blazor.8yirhw32dk.wasm": "DiegoG.Finance.Blazor.wasm",
+      "DiegoG.Finance.cia2g0abai.wasm": "DiegoG.Finance.wasm",
       "MessagePack.Annotations.2q8nqg5wp2.wasm": "MessagePack.Annotations.wasm",
       "MessagePack.qiaw4338qw.wasm": "MessagePack.wasm",
       "Microsoft.AspNetCore.Components.Forms.3fgbtp8v0v.wasm": "Microsoft.AspNetCore.Components.Forms.wasm",
@@ -109,8 +109,8 @@
       "System.Runtime.InteropServices.JavaScript.mwa725m7o8.wasm": "sha256-Cjdb0G7x7YHp1aN8K34JIjyB6iQIEsmMfoZJJ71ZuOw="
     },
     "assembly": {
-      "DiegoG.Finance.Blazor.wm70tm4g7x.wasm": "sha256-WETTo4c3KpbyMFR5Oj0Qw4u7DDtU4xbqc1W84G9Imjc=",
-      "DiegoG.Finance.st7rjvqm47.wasm": "sha256-oLAqMu7IBt/5JK0edyvrj7Upi6GH2dwYI3DH6lPjBOc=",
+      "DiegoG.Finance.Blazor.8yirhw32dk.wasm": "sha256-UIYN9jygUT2md0ZLc4ISm2sWdghMHP43r5pY5XpFQMc=",
+      "DiegoG.Finance.cia2g0abai.wasm": "sha256-TO5eo4JxFlqzWyuvDzG5Ei9o33bRCMAX6b0zDuFbvZw=",
       "MessagePack.Annotations.2q8nqg5wp2.wasm": "sha256-FopWzfcCfKDFMOo6Yb11BhfCbWt2HGk71aOYD9D7SHM=",
       "MessagePack.qiaw4338qw.wasm": "sha256-vmLJHcKO5Pi1WFInUPINdx1sgf0iCJZ0Zk/j0eyT0d0=",
       "Microsoft.AspNetCore.Components.Forms.3fgbtp8v0v.wasm": "sha256-36hHDTibskZWJe1Hq2n48ALccRhTYjhdgYIkEBdFYlo=",

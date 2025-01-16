@@ -1,17 +1,17 @@
 self.assetsManifest = {
-  "version": "qqzrdu4y",
+  "version": "o/eezI80",
   "assets": [
     {
       "hash": "sha256-zKLJ5ezXJ8cly2y0j5dJXh8MBLtM7SM08G/dWPv9uZk=",
       "url": "DiegoG.Finance.Blazor.styles.css"
     },
     {
-      "hash": "sha256-WETTo4c3KpbyMFR5Oj0Qw4u7DDtU4xbqc1W84G9Imjc=",
-      "url": "_framework/DiegoG.Finance.Blazor.wm70tm4g7x.wasm"
+      "hash": "sha256-UIYN9jygUT2md0ZLc4ISm2sWdghMHP43r5pY5XpFQMc=",
+      "url": "_framework/DiegoG.Finance.Blazor.8yirhw32dk.wasm"
     },
     {
-      "hash": "sha256-oLAqMu7IBt/5JK0edyvrj7Upi6GH2dwYI3DH6lPjBOc=",
-      "url": "_framework/DiegoG.Finance.st7rjvqm47.wasm"
+      "hash": "sha256-TO5eo4JxFlqzWyuvDzG5Ei9o33bRCMAX6b0zDuFbvZw=",
+      "url": "_framework/DiegoG.Finance.cia2g0abai.wasm"
     },
     {
       "hash": "sha256-FopWzfcCfKDFMOo6Yb11BhfCbWt2HGk71aOYD9D7SHM=",
@@ -318,7 +318,7 @@ self.assetsManifest = {
       "url": "_framework/System.pndwwxah3a.wasm"
     },
     {
-      "hash": "sha256-kh8+Uejik8441C4+Q30qtaGdiLxWCVTC84Bv7bKPjj4=",
+      "hash": "sha256-vKuXMZya7w2/x+czwLwXVBrLQs/rtPsZJIrR6vFSviI=",
       "url": "_framework/blazor.boot.json"
     },
     {
@@ -374,7 +374,7 @@ self.assetsManifest = {
       "url": "icon-512.png"
     },
     {
-      "hash": "sha256-p10h7ecTIPcQ3HF51n3UytkOxA8LbJCNqyN4Xy/gSdo=",
+      "hash": "sha256-HicMDL85KmnE0kV4o3bxMZ3BKIwJDWJKmYc9EaCR4Mk=",
       "url": "index.html"
     },
     {
