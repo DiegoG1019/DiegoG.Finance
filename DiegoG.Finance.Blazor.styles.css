@@ -1,0 +1,107 @@
+/* /Layout/MainLayout.razor.rz.scp.css */
+.page[b-98d9wqvpvl] {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+main[b-98d9wqvpvl] {
+    flex: 1;
+}
+
+.sidebar[b-98d9wqvpvl] {
+    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+}
+
+.top-email[b-98d9wqvpvl] {
+    transition: border ease-in-out 0.1s;
+    border-radius: 10%;
+    padding: 2px;
+    border-width: 0;
+    border-color: lightblue;
+    border-style: solid;
+}
+
+    .top-email > svg[b-98d9wqvpvl] {
+        transition: width ease-in-out 0.25s, height ease-in-out 0.25s
+    }
+
+.top-email:hover[b-98d9wqvpvl] {
+    border-width: 3px;
+}
+
+.top-email:hover > svg[b-98d9wqvpvl] {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+}
+
+.bi-gh-fill-nav-menu[b-98d9wqvpvl] {
+    content: url('https://github.com/fluidicon.png');
+    height: 1.5rem;
+    width: 1.5rem;
+}
+
+.top-row[b-98d9wqvpvl] {
+    background-color: #010409;
+    border-bottom: 1px solid #3D444D;
+    justify-content: flex-end;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+}
+
+    .top-row[b-98d9wqvpvl]  a, .top-row[b-98d9wqvpvl]  .btn-link {
+        white-space: nowrap;
+        margin-left: 1.5rem;
+        text-decoration: none;
+    }
+
+    .top-row[b-98d9wqvpvl]  a:hover, .top-row[b-98d9wqvpvl]  .btn-link:hover {
+        text-decoration: underline;
+    }
+
+    .top-row[b-98d9wqvpvl]  a:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+@media (max-width: 640.98px) {
+    .top-row[b-98d9wqvpvl] {
+        justify-content: space-between;
+    }
+
+    .top-row[b-98d9wqvpvl]  a, .top-row[b-98d9wqvpvl]  .btn-link {
+        margin-left: 0;
+    }
+}
+
+@media (min-width: 641px) {
+    .page[b-98d9wqvpvl] {
+        flex-direction: row;
+    }
+
+    .sidebar[b-98d9wqvpvl] {
+        width: 250px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    .top-row[b-98d9wqvpvl] {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .top-row.auth[b-98d9wqvpvl]  a:first-child {
+        flex: 1;
+        text-align: right;
+        width: 0;
+    }
+
+    .top-row[b-98d9wqvpvl], article[b-98d9wqvpvl] {
+        padding-left: 2rem !important;
+        padding-right: 1.5rem !important;
+    }
+}
