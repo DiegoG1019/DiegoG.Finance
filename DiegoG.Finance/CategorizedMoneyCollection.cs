@@ -1,4 +1,5 @@
-﻿using NodaMoney;
+﻿using MessagePack;
+using NodaMoney;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;

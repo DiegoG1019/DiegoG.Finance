@@ -13,6 +13,7 @@ public static class JsonConverterHelpers
         converters.Add(MoneyCollectionConverter.JsonConverter);
         converters.Add(CurrencyConverter.JsonConverter);
         converters.Add(CategorizedMoneyCollectionConverter.JsonConverter);
+        converters.Add(SpendingTrackerSheetConverter.JsonConverter);
     }
 }
 
