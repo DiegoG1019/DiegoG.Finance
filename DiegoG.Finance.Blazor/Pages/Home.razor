@@ -1,7 +1,20 @@
 ﻿@page "/"
+@using DiegoG.Finance.Blazor.Services
+@inject WorkSheetStorage storage
+@inject NavigationManager nav
 
-<PageTitle>Home</PageTitle>
+<PageTitle>@Language.CurrentLanguage.ShortSiteTitle</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>@Language.CurrentLanguage.SiteTitle</h1>
+<h2>@Language.CurrentLanguage.SelectWorkSheet</h2>
 
-Welcome to your new app.
+<!--
+<InputSelect TValue="string" id="language-selector" class="form-select">
+    @foreach (var header in Headers)
+    {
+        <option value="@header.Path">@header.Name</option>
+    }
+</InputSelect>
+-->
+
+<button onclick="@GoToWorkPage"></button>

@@ -6,9 +6,10 @@ using System.Text.Json.Serialization;
 
 namespace DiegoG.Finance;
 
-public class SpendingTrackerSheet : ISheet
+public class SpendingTrackerSheet : IFinancialWork
 {
     private readonly Dictionary<string, SpendingTrackerCategoryResult> results = [];
+    internal IFinancialWork? Parent;
 
     public class SpendingTrackerCategoryResult(Percentage goal, MoneyCollection collection, SpendingTrackerSheet sheet)
     {
@@ -19,14 +20,11 @@ public class SpendingTrackerSheet : ISheet
         public Money Total => Collection.MoneyTotal;
     }
 
-    public SpendingTrackerSheet(
-        Currency currency,
-        MoneyCollection? incomeSources = null,
-        CategorizedMoneyCollection? expenseCategories = null
+    private SpendingTrackerSheet(
+        MoneyCollection? incomeSources,
+        CategorizedMoneyCollection? expenseCategories
     )
     {
-        Currency = currency;
-        
         if (incomeSources is null)
             IncomeSources = new(Currency);
         else
@@ -34,6 +32,9 @@ public class SpendingTrackerSheet : ISheet
             if (incomeSources.Currency != Currency)
                 throw new ArgumentException($"A SpendingTrackerSheet of Currency {Currency} cannot have an IncomeSources collection of Currency {incomeSources.Currency}");
             IncomeSources = incomeSources;
+            if (IncomeSources.Parent is not null)
+                throw new ArgumentException($"The MoneyCollection for IncomeSources already has a parent");
+            IncomeSources.Parent = this;
         }
 
         if (expenseCategories is null)
@@ -43,9 +44,32 @@ public class SpendingTrackerSheet : ISheet
             if (expenseCategories.Currency != Currency)
                 throw new ArgumentException($"A SpendingTrackerSheet of Currency {Currency} cannot have an ExpenseCategories collection of Currency {expenseCategories.Currency}");
             ExpenseCategories = expenseCategories;
+            if (ExpenseCategories.Parent is not null)
+                throw new ArgumentException($"The CategorizedMoneyCollection for ExpenseCategories already has a parent");
+            ExpenseCategories.Parent = this;
         }
 
         ExpenseCategories.CollectionChanged += ExpenseCategories_CollectionChanged;
+    }
+
+    public SpendingTrackerSheet(
+        IFinancialWork parent,
+        MoneyCollection? incomeSources = null,
+        CategorizedMoneyCollection? expenseCategories = null
+    ) : this(incomeSources, expenseCategories)
+    {
+        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
+        if (Parent == this)
+            throw new ArgumentException("The SpendingTrackerSheet's parent cannot be the same instance", nameof(parent));
+    }
+
+    public SpendingTrackerSheet(
+        Currency currency,
+        MoneyCollection? incomeSources = null,
+        CategorizedMoneyCollection? expenseCategories = null
+    ) : this(incomeSources, expenseCategories)
+    {
+        Currency = currency;
     }
 
     private void ExpenseCategories_CollectionChanged(
@@ -72,7 +96,7 @@ public class SpendingTrackerSheet : ISheet
         }
     }
 
-    public Currency Currency { get; }
+    public Currency Currency => Parent?.Currency ?? field;
     public MoneyCollection IncomeSources { get; } 
     public CategorizedMoneyCollection ExpenseCategories { get; }
 

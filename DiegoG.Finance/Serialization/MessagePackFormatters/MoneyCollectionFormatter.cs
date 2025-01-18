@@ -23,11 +23,19 @@ public sealed class MoneyCollectionFormatter : IMessagePackFormatter<MoneyCollec
         }
     }
 
-    public MoneyCollection? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options) 
+    public static MoneyCollection? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options, IFinancialWork? parent)
         => reader.IsNil
             ? null
-            : new MoneyCollection(
-                CurrencyFormatter.Instance.Deserialize(ref reader, options),
-                MessagePackSerializer.Deserialize<HashSet<LabeledAmount>>(ref reader, options)
-            );
+            : parent is null 
+                ? new MoneyCollection(
+                    CurrencyFormatter.Instance.Deserialize(ref reader, options),
+                    MessagePackSerializer.Deserialize<HashSet<LabeledAmount>>(ref reader, options)
+                )
+                : new MoneyCollection(
+                    parent,
+                    MessagePackSerializer.Deserialize<HashSet<LabeledAmount>>(ref reader, options)
+                );
+
+    public MoneyCollection? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        => Deserialize(ref reader, options, null);
 }

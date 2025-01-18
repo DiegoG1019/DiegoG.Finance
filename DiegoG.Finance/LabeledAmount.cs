@@ -32,9 +32,9 @@ public readonly record struct LabeledAmount(string? Label, decimal Amount)
         public static LabeledAmountComparer Instance { get; } = new();
 
         public bool Equals(LabeledAmount x, LabeledAmount y)
-            => x.Label == y.Label;
+            => x.Label?.Equals(y.Label, StringComparison.OrdinalIgnoreCase) is true;
 
         public int GetHashCode([DisallowNull] LabeledAmount obj)
-            => obj.Label?.GetHashCode() ?? 0;
+            => obj.Label?.GetHashCode(StringComparison.OrdinalIgnoreCase) ?? 0;
     }
 }

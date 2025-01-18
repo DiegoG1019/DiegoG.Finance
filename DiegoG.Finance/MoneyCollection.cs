@@ -5,11 +5,12 @@ using System.Text.Json.Serialization;
 
 namespace DiegoG.Finance;
 
-public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>, IEnumerable<LabeledMoney>
+public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>, IEnumerable<LabeledMoney>, IFinancialWork
 {
     internal protected readonly HashSet<LabeledAmount> _moneylist;
 
     public delegate void MoneyCollectionTotalChangedEventHandler(MoneyCollection sender, decimal difference);
+    public delegate void MoneyCollectionCurrencyChangedEventHandler(MoneyCollection sender, Currency newCurrency);
 
     /// <summary>
     /// This event is fired whenever <see cref="Total"/> changes
@@ -19,32 +20,40 @@ public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>,
     /// </remarks>
     public event Action<MoneyCollection, decimal>? TotalChanged;
     internal ReferredEventReference<MoneyCollectionTotalChangedEventHandler>? Internal_totalChanged;
+    internal IFinancialWork? Parent;
 
-    internal MoneyCollection(Currency currency, HashSet<LabeledAmount>? moneylist)
+    public MoneyCollection(IFinancialWork parent, IEnumerable<LabeledAmount>? amounts = null)
     {
-        _moneylist = moneylist ?? [];
+        _moneylist = amounts is null
+                        ? new(LabeledAmount.LabeledAmountComparer.Instance)
+                        : new(amounts, LabeledAmount.LabeledAmountComparer.Instance);
+
+        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
+        if (Parent == this)
+            throw new ArgumentException("The MoneyCollection's parent cannot be the same instance", nameof(parent));
+        RecalculateTotal();
+    }
+
+    public MoneyCollection(Currency currency, IEnumerable<LabeledAmount>? amounts = null)
+    {
+        _moneylist = amounts is null
+                        ? new(LabeledAmount.LabeledAmountComparer.Instance)
+                        : new(amounts, LabeledAmount.LabeledAmountComparer.Instance);
+
         Currency = currency;
         RecalculateTotal();
     }
 
-    public MoneyCollection(Currency currency)
+    public IEnumerable<LabeledMoney> GetAmountsAsMoney()
     {
-        _moneylist = [];
-        Currency = currency;
+        foreach (var mon in _moneylist)
+            yield return new LabeledMoney(mon.Label, new(mon.Amount, Currency));
     }
 
-    public MoneyCollection(Currency currency, int capacity)
-    {
-        _moneylist = new HashSet<LabeledAmount>(capacity);
-        Currency = currency;
-    }
-
-    public Currency Currency { get; }
-
-    [JsonIgnore]
     public decimal Total { get; private set; }
 
-    [JsonIgnore]
+    public Currency Currency => Parent?.Currency ?? field;
+
     public Money MoneyTotal => new(Total, Currency);
 
     public bool Add(LabeledAmount item)

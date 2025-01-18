@@ -17,6 +17,13 @@ public sealed class Language
     public required string NotFoundTitle { get; init; }
     public required string NotFoundMessage { get; init; }
     public required string ContactMe { get; init; }
+
+    public required string SelectWorkSheet { get; init; }
+    public required string UploadWorkSheet { get; init; }
+    public required string CreateNewWorkSheet { get; init; }
+    public required string ProtectWorkSheet { get; init; }
+    public required string Password { get; init; }
+    public required string OpenWorkSheet { get; init; }
 }
 
 public static class AvailableLanguages
@@ -29,12 +36,19 @@ public static class AvailableLanguages
             LanguageCode = "esp",
             CVUri = "/Diego CV - ESPAÑOL - DEC24.pdf",
             Home = "Principal",
-            SiteTitle = "Tracker de Finanzas | Dev DiegoG",
-            ShortSiteTitle = "Finanzas | DiegoG",
+            SiteTitle = "Dev DiegoG | Tracker de Finanzas",
+            ShortSiteTitle = "Dev DiegoG | Finanzas",
             SubmitButton = "Subir",
             NotFoundTitle = "No Encontrado",
             NotFoundMessage = "Lo siento, no hay nada en esta dirección",
             ContactMe = "Contáctame!",
+
+            SelectWorkSheet = "Selecciona una hoja de trabajo",
+            UploadWorkSheet = "Sube una hoja de trabajo",
+            CreateNewWorkSheet = "Crear una nueva hoja de trabajo",
+            ProtectWorkSheet = "Proteger hoja de trabajo",
+            Password = "Contraseña",
+            OpenWorkSheet = "Abrir hoja de trabajo",
         };
 
         English = new Language()
@@ -43,12 +57,19 @@ public static class AvailableLanguages
             LanguageCode = "eng",
             CVUri = "/Diego CV - ENGLISH - DEC24.pdf",
             Home = "Home",
-            SiteTitle = "Finance Tracker | Dev DiegoG",
-            ShortSiteTitle = "Finances | DiegoG",
+            SiteTitle = "Dev DiegoG | Finance Tracker",
+            ShortSiteTitle = "Dev DiegoG | Finances",
             SubmitButton = "Submit",
             NotFoundTitle = "Not Found",
             NotFoundMessage = "Sorry, there's nothing at this address",
             ContactMe = "Contact Me!",
+
+            SelectWorkSheet = "Select a worksheet",
+            UploadWorkSheet = "Upload a worksheet",
+            CreateNewWorkSheet = "Create a new worksheet",
+            ProtectWorkSheet = "Protect worksheet info",
+            Password = "Input a password for the worksheet",
+            OpenWorkSheet = "Open worksheet",
         };
 
         Languages = typeof(AvailableLanguages).GetProperties()

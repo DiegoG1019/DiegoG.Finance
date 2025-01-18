@@ -1,0 +1,69 @@
+﻿@page "/work"
+
+<PageTitle>@Language.CurrentLanguage.ShortSiteTitle</PageTitle>
+
+<div class="container worktable-container worktable-sheet-title">
+    <div class="row">
+        <div class="col-4"><h2>@WorkTable.CurrentSheet.Name</h2></div>
+        <div class="col-2">@WorkTable.CurrentSheet.SpendingTrackers</div>
+    </div>
+</div>
+
+<div class="worktable worktable-container worktable-tracker-sheet worktable-@CollapseControls[0].CollapseClass">
+    <div class="container">
+        <div class="row worktable worktable-header">
+            <table>
+                @foreach (var item in WorkTable.CurrentSheet.SpendingTrackers.IncomeSources.GetAmountsAsMoney())
+                {
+                    <thead>@item.Label</thead><tr>@item.Money</tr>
+                }
+                <!--Implement Input-->
+            </table>
+        </div>
+        <div class="row worktable worktable-body">
+            <div class="col worktable worktable-expense-categories">
+                <div class="row">
+                    @foreach(var category in WorkTable.CurrentSheet.SpendingTrackers.ExpenseCategories)
+                    {
+                        <div class="col worktable worktable-expense-category">
+                            <div class="worktable worktable-expense-category-title">
+                                <h3>@category.Key</h3>
+                            </div>
+                            <div class="worktable worktable-expense-category-table">
+                                @foreach(var (label, money) in category.Value)
+                                {
+                                    <thead>@label</thead><tr>@money</tr>
+                                }
+                                <!--Implement Input-->
+                            </div>
+                        </div>
+                    }
+                    <!--Implement Input-->
+                </div>
+            </div>
+            <div class="col worktable worktable-output">
+                <div class="row">
+                    <div class="col worktable worktable-results">
+                        Worktable Results
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col worktable worktable-extra">
+                        Worktable Extra
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="worktable worktable-container worktable-footer">
+    <div class="container">
+        <div class="row">
+            <div class="col worktable-meta">
+                <p>
+                    @(Language.CurrentLanguage.WorkSheetVersion): @WorkTable.CurrentSheet.Version
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

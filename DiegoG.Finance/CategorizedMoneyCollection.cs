@@ -9,17 +9,43 @@ using static DiegoG.Finance.MoneyCollection;
 
 namespace DiegoG.Finance;
 
-public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCollection>
+public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCollection>, IFinancialWork
 {
     private ReferredEventReference<MoneyCollectionTotalChangedEventHandler> MoneyTotalChanged;
+    internal IFinancialWork? Parent;
 
     public delegate void CategorizedMoneyCollectionTotalChangedEventHandler(CategorizedMoneyCollection sender, MoneyCollection moneyCollection, decimal difference);
+
+    internal CategorizedMoneyCollection(IFinancialWork parent, Dictionary<string, MoneyCollection> categories) : base(categories)
+    {
+        MoneyTotalChanged = new(Val_TotalChanged);
+        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
+        if (Parent == this)
+            throw new ArgumentException("The CategorizedMoneyCollection's parent cannot be the same instance", nameof(parent));
+        RecalculateTotal();
+        foreach (var x in _categories.Values)
+        {
+            x.Internal_totalChanged = MoneyTotalChanged;
+            x.Parent = this;
+        }
+    }
 
     internal CategorizedMoneyCollection(Currency currency, Dictionary<string, MoneyCollection> categories) : base(categories)
     {
         MoneyTotalChanged = new(Val_TotalChanged);
         Currency = currency;
         RecalculateTotal();
+        foreach (var x in _categories.Values)
+        {
+            x.Internal_totalChanged = MoneyTotalChanged;
+            x.Parent = this;
+        }
+    }
+
+    public CategorizedMoneyCollection(IFinancialWork parent) : base()
+    {
+        MoneyTotalChanged = new(Val_TotalChanged);
+        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
     }
 
     public CategorizedMoneyCollection(Currency currency) : base()
@@ -28,19 +54,16 @@ public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCo
         Currency = currency;
     }
 
-    public CategorizedMoneyCollection(Currency currency, int capacity) : base(capacity)
-    {
-        MoneyTotalChanged = new(Val_TotalChanged);
-        Currency = currency;
-    }
-
-    public Currency Currency { get; }
+    public Currency Currency => Parent?.Currency ?? field;
 
     public decimal Total { get; private set; }
 
     public Money MoneyTotal => new(Total, Currency);
 
     public event CategorizedMoneyCollectionTotalChangedEventHandler? TotalChanged;
+
+    public void EnsureCapacity(int capacity)
+        => _categories.EnsureCapacity(capacity);
 
     private void Val_TotalChanged(MoneyCollection collection, decimal difference)
     {
@@ -73,10 +96,7 @@ public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCo
     {
         decimal total = 0;
         foreach (var x in _categories.Values)
-        {
             total += x.Total;
-            x.Internal_totalChanged = MoneyTotalChanged;
-        }
         Total = total;
     }
 }
