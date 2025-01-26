@@ -1,13 +1,18 @@
 ﻿using NodaMoney;
 using System.Collections;
+using System.Collections.Specialized;
 using System.ComponentModel.Design;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 
 namespace DiegoG.Finance;
 
-public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>, IEnumerable<LabeledMoney>, IFinancialWork
+public class MoneyCollection : IReadOnlyCollection<LabeledAmount>, IFinancialWork, IInternalLabeledAmountParent
 {
     internal protected readonly HashSet<LabeledAmount> _moneylist;
+
+    internal readonly ReferredReference<Action<LabeledAmount, decimal>> __internal_amountchanged;
 
     public delegate void MoneyCollectionTotalChangedEventHandler(MoneyCollection sender, decimal difference);
     public delegate void MoneyCollectionCurrencyChangedEventHandler(MoneyCollection sender, Currency newCurrency);
@@ -19,14 +24,15 @@ public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>,
     /// Note that clearing this event (such as via <c><see cref="TotalChanged"/> = <see langword="null"/></c>) will <i>not</i> affect <see cref="CategorizedMoneyCollection"/>, as they will still see the changes in <see cref="Total"/>
     /// </remarks>
     public event Action<MoneyCollection, decimal>? TotalChanged;
-    internal ReferredEventReference<MoneyCollectionTotalChangedEventHandler>? Internal_totalChanged;
-    internal IFinancialWork? Parent;
+    internal ReferredReference<MoneyCollectionTotalChangedEventHandler>? Internal_TotalChanged;
+    internal IInternalMoneyCollectionParent? Parent;
 
-    public MoneyCollection(IFinancialWork parent, IEnumerable<LabeledAmount>? amounts = null)
+    internal MoneyCollection(IInternalMoneyCollectionParent parent, IEnumerable<LabeledAmount>? amounts = null)
     {
+        __internal_amountchanged = new(LabeledAmountChanged);
         _moneylist = amounts is null
-                        ? new(LabeledAmount.LabeledAmountComparer.Instance)
-                        : new(amounts, LabeledAmount.LabeledAmountComparer.Instance);
+                        ? new()
+                        : new(amounts);
 
         Parent = parent ?? throw new ArgumentNullException(nameof(parent));
         if (Parent == this)
@@ -34,21 +40,28 @@ public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>,
         RecalculateTotal();
     }
 
-    public MoneyCollection(Currency currency, IEnumerable<LabeledAmount>? amounts = null)
+    public MoneyCollection(Currency currency, IEnumerable<LabeledAmount>? amounts)
     {
+        __internal_amountchanged = new(LabeledAmountChanged);
         _moneylist = amounts is null
-                        ? new(LabeledAmount.LabeledAmountComparer.Instance)
-                        : new(amounts, LabeledAmount.LabeledAmountComparer.Instance);
+                        ? new()
+                        : new(amounts);
 
         Currency = currency;
         RecalculateTotal();
     }
 
-    public IEnumerable<LabeledMoney> GetAmountsAsMoney()
+    public MoneyCollection(Currency currency)
     {
-        foreach (var mon in _moneylist)
-            yield return new LabeledMoney(mon.Label, new(mon.Amount, Currency));
+        __internal_amountchanged = new(LabeledAmountChanged);
+        _moneylist = [];
+
+        Currency = currency;
+        RecalculateTotal();
     }
+
+#warning When an owner CategorizedMoneyCollection is cleared, Category is not updated. It would turn "Clear" into a O(n) operation, which is not ideal
+    public string? Category { get; internal set; }
 
     public decimal Total { get; private set; }
 
@@ -56,22 +69,23 @@ public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>,
 
     public Money MoneyTotal => new(Total, Currency);
 
-    public bool Add(LabeledAmount item)
+    public LabeledAmount Add(string label, decimal amount)
     {
-        if (_moneylist.Add(item))
-        {
-            Total += item.Amount;
-            RaiseEvent(item.Amount);
-            return true;
-        }
-        return false;
+        var item = new LabeledAmount(this, label, amount);
+        _moneylist.Add(item);
+        Total += item.Amount;
+        RaiseEvent(NotifyCollectionChangedAction.Add, item);
+        return item;
     }
 
     public void Clear()
     {
         _moneylist.Clear();
+        var diff = -Total;
         Total = 0;
-        TotalChanged?.Invoke(this, 0);
+        Internal_TotalChanged?.Value?.Invoke(this, diff);
+        TotalChanged?.Invoke(this, diff);
+        RaiseEvent(NotifyCollectionChangedAction.Reset, default, false);
     }
 
     public bool Remove(LabeledAmount item)
@@ -79,86 +93,11 @@ public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>,
         if (_moneylist.Remove(item))
         {
             Total -= item.Amount;
-            RaiseEvent(item.Amount);
+            RaiseEvent(NotifyCollectionChangedAction.Remove, item);
             return true;
         }
 
         return false;
-    }
-
-    public void ExceptWith(IEnumerable<LabeledAmount> other)
-    {
-        ArgumentNullException.ThrowIfNull(other);
-
-        // This is already the empty set; return.
-        if (Count == 0)
-            return;
-
-        // Special case if other is this; a set minus itself is the empty set.
-        if (other == this)
-        {
-            Clear();
-            return;
-        }
-
-        // Remove every element in other from this.
-        foreach (LabeledAmount element in other)
-        {
-            Remove(element);
-        }
-    }
-
-    public void IntersectWith(IEnumerable<LabeledAmount> other)
-    {
-        ArgumentNullException.ThrowIfNull(other);
-
-        // Intersection of anything with empty set is empty set, so return if count is 0.
-        // Same if the set intersecting with itself is the same set.
-        if (Count == 0 || other == this)
-            return;
-
-        // If other is known to be empty, intersection is empty set; remove all elements, and we're done.
-        if (other.Any() is false)
-        {
-            Clear();
-            return;
-        }
-
-        _moneylist.IntersectWith(other);
-        RecalculateTotal();
-    }
-
-    public void SymmetricExceptWith(IEnumerable<LabeledAmount> other)
-    {
-        ArgumentNullException.ThrowIfNull(other);
-
-        // If set is empty, then symmetric difference is other.
-        if (Count == 0)
-        {
-            UnionWith(other);
-            return;
-        }
-
-        // Special-case this; the symmetric difference of a set with itself is the empty set.
-        if (other == this)
-        {
-            Clear();
-            return;
-        }
-
-        _moneylist.SymmetricExceptWith(other);
-        RecalculateTotal();
-    }
-
-    public void UnionWith(IEnumerable<LabeledAmount> other)
-    {
-        ArgumentNullException.ThrowIfNull(other);
-
-        foreach (var item in other)
-        {
-            if (Add(item))
-                Total += item.Amount;
-        }
     }
 
     public void RecalculateTotal()
@@ -169,26 +108,16 @@ public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>,
         Total = total;
     }
 
-    private void RaiseEvent(decimal diff)
+    private void RaiseEvent(NotifyCollectionChangedAction action, LabeledAmount? item, bool raiseTotalChanged = true)
     {
-        Internal_totalChanged?.Event?.Invoke(this, diff);
-        TotalChanged?.Invoke(this, diff);
+        if (raiseTotalChanged)
+        {
+            Debug.Assert(item is not null);
+            Internal_TotalChanged?.Value?.Invoke(this, item.Amount);
+            TotalChanged?.Invoke(this, item.Amount);
+        }
+        CollectionChanged?.Invoke(this, action, item);
     }
-
-    void ICollection<LabeledAmount>.Add(LabeledAmount item)
-        => Add(item);
-
-    public bool IsProperSubsetOf(IEnumerable<LabeledAmount> other) => _moneylist.IsProperSubsetOf(other);
-
-    public bool IsProperSupersetOf(IEnumerable<LabeledAmount> other) => _moneylist.IsProperSupersetOf(other);
-
-    public bool IsSubsetOf(IEnumerable<LabeledAmount> other) => _moneylist.IsSubsetOf(other);
-
-    public bool IsSupersetOf(IEnumerable<LabeledAmount> other) => _moneylist.IsSupersetOf(other);
-
-    public bool Overlaps(IEnumerable<LabeledAmount> other) => _moneylist.Overlaps(other);
-
-    public bool SetEquals(IEnumerable<LabeledAmount> other) => _moneylist.SetEquals(other);
 
     public bool Contains(LabeledAmount item) => _moneylist.Contains(item);
 
@@ -196,15 +125,19 @@ public class MoneyCollection : ISet<LabeledAmount>, IReadOnlySet<LabeledAmount>,
 
     public int Count => _moneylist.Count;
 
-    bool ICollection<LabeledAmount>.IsReadOnly => false;
-
     public IEnumerator<LabeledAmount> GetEnumerator() => _moneylist.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => _moneylist.GetEnumerator();
 
-    IEnumerator<LabeledMoney> IEnumerable<LabeledMoney>.GetEnumerator()
+    public event FinancialCollectionChangedEventHandler<MoneyCollection, LabeledAmount>? CollectionChanged;
+
+    private void LabeledAmountChanged(LabeledAmount amount, decimal difference)
     {
-        foreach (var item in _moneylist)
-            yield return new LabeledMoney(item.Label, new(item.Amount, Currency));
+        Parent?.Internal_MemberChanged?.Value?.Invoke(this, amount);
+        Internal_TotalChanged?.Value?.Invoke(this, difference);
+        TotalChanged?.Invoke(this, difference);
+        CollectionChanged?.Invoke(this, NotifyCollectionChangedAction.Replace, amount);
     }
+
+    ReferredReference<Action<LabeledAmount, decimal>> IInternalLabeledAmountParent.Internal_MemberChanged => __internal_amountchanged;
 }

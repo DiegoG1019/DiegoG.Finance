@@ -23,7 +23,7 @@ public sealed class MoneyCollectionFormatter : IMessagePackFormatter<MoneyCollec
         }
     }
 
-    public static MoneyCollection? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options, IFinancialWork? parent)
+    internal static MoneyCollection? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options, IInternalMoneyCollectionParent? parent)
         => reader.IsNil
             ? null
             : parent is null 

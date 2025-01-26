@@ -7,7 +7,7 @@ namespace DiegoG.Finance.Blazor.Pages;
 public partial class Home
 {
     [CascadingParameter]
-    public LanguageProvider Language { get; set; }
+    public ContextProvider Context { get; set; }
 
     [CascadingParameter]
     public WorkTable WorkTable { get; set; }
@@ -21,11 +21,18 @@ public partial class Home
             Headers.Add(header);
             StateHasChanged();
         }
+
+        Context.PropertyChanged += Language_PropertyChanged;
+    }
+
+    private void Language_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        StateHasChanged();
     }
 
     private Task GoToWorkPage()
     {
-        WorkTable.CurrentSheet = new(new(Currency.CurrentCurrency));
+        //WorkTable.CurrentSheet = new();
         nav.NavigateTo("/work");
         return Task.CompletedTask;
     }

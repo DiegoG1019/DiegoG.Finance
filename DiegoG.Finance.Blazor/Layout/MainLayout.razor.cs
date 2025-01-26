@@ -7,7 +7,7 @@ namespace DiegoG.Finance.Blazor.Layout;
 public partial class MainLayout
 {
     [CascadingParameter]
-    public LanguageProvider Language { get; set; }
+    public ContextProvider Language { get; set; }
 
     private string clang;
     public string CurrentLanguage

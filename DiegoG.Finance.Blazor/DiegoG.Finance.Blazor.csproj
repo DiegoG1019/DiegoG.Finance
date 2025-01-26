@@ -1,11 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	<LangVersion>preview</LangVersion>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\css\work.css" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
@@ -14,10 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\GLV.Shared\GLV.Shared.Blazor\GLV.Shared.Blazor.csproj" />
+    <ProjectReference Include="..\..\GLV.Shared\GLV.Shared.Common\GLV.Shared.Common.csproj" />
     <ProjectReference Include="..\DiegoG.Finance\DiegoG.Finance.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
   </ItemGroup>
 

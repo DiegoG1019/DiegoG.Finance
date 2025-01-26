@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Frozen;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Reflection;
 
 namespace DiegoG.Finance.Blazor.Services;
 
 public sealed class Language
 {
-    public required string LanguageName { get; set; }
+    public required CultureInfo Culture { get; init; }
+    public required string LanguageName { get; init; }
     public required string LanguageCode { get; init; }
     public required string CVUri { get; init; }
     public required string Home { get; init; }
@@ -17,6 +19,8 @@ public sealed class Language
     public required string NotFoundTitle { get; init; }
     public required string NotFoundMessage { get; init; }
     public required string ContactMe { get; init; }
+    public required string CreatedDate { get; init; }
+    public required string SourceCode { get; init; }
 
     public required string SelectWorkSheet { get; init; }
     public required string UploadWorkSheet { get; init; }
@@ -24,6 +28,7 @@ public sealed class Language
     public required string ProtectWorkSheet { get; init; }
     public required string Password { get; init; }
     public required string OpenWorkSheet { get; init; }
+    public required string WorkSheetVersion { get; init; }
 }
 
 public static class AvailableLanguages
@@ -32,6 +37,8 @@ public static class AvailableLanguages
     {
         Español = new Language()
         {
+            Culture = CultureInfo.GetCultureInfo("es"),
+
             LanguageName = "Español",
             LanguageCode = "esp",
             CVUri = "/Diego CV - ESPAÑOL - DEC24.pdf",
@@ -42,6 +49,8 @@ public static class AvailableLanguages
             NotFoundTitle = "No Encontrado",
             NotFoundMessage = "Lo siento, no hay nada en esta dirección",
             ContactMe = "Contáctame!",
+            CreatedDate = "Fecha de Creación",
+            SourceCode = "Ver Fuente",
 
             SelectWorkSheet = "Selecciona una hoja de trabajo",
             UploadWorkSheet = "Sube una hoja de trabajo",
@@ -49,10 +58,13 @@ public static class AvailableLanguages
             ProtectWorkSheet = "Proteger hoja de trabajo",
             Password = "Contraseña",
             OpenWorkSheet = "Abrir hoja de trabajo",
+            WorkSheetVersion = "Versión de hoja"
         };
 
         English = new Language()
         {
+            Culture = CultureInfo.GetCultureInfo("en"),
+
             LanguageName = "English",
             LanguageCode = "eng",
             CVUri = "/Diego CV - ENGLISH - DEC24.pdf",
@@ -63,6 +75,8 @@ public static class AvailableLanguages
             NotFoundTitle = "Not Found",
             NotFoundMessage = "Sorry, there's nothing at this address",
             ContactMe = "Contact Me!",
+            CreatedDate = "Creation Date",
+            SourceCode = "View Source",
 
             SelectWorkSheet = "Select a worksheet",
             UploadWorkSheet = "Upload a worksheet",
@@ -70,6 +84,7 @@ public static class AvailableLanguages
             ProtectWorkSheet = "Protect worksheet info",
             Password = "Input a password for the worksheet",
             OpenWorkSheet = "Open worksheet",
+            WorkSheetVersion = "Worksheet version"
         };
 
         Languages = typeof(AvailableLanguages).GetProperties()

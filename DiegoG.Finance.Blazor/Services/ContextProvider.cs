@@ -1,13 +1,15 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace DiegoG.Finance.Blazor.Services;
 
-public sealed class LanguageProvider : INotifyPropertyChanged
+public sealed class ContextProvider : INotifyPropertyChanged
 {
-    private static readonly PropertyChangedEventArgs changedArgs = new(nameof(CurrentLanguage));
+    private static readonly PropertyChangedEventArgs langChangedArgs = new(nameof(CurrentLanguage));
+    private static readonly PropertyChangedEventArgs themeChangedArgs = new(nameof(CurrentTheme));
 
-    public LanguageProvider()
+    public ContextProvider()
     {
         var langcode = CultureInfo.CurrentCulture.ThreeLetterISOLanguageName;
         if (AvailableLanguages.Languages.TryGetValue(langcode, out var lang))
@@ -28,7 +30,21 @@ public sealed class LanguageProvider : INotifyPropertyChanged
             ArgumentNullException.ThrowIfNull(value);
             if (value == _currentLanguage) return;
             _currentLanguage = value;
-            PropertyChanged?.Invoke(this, changedArgs);
+            PropertyChanged?.Invoke(this, langChangedArgs);
+        }
+    }
+
+    [field: AllowNull]
+    public ColorTheme CurrentTheme
+    {
+        get => field;
+        set
+        {
+            if (value != field)
+            {
+                field = value ?? ColorTheme.Default;
+                PropertyChanged?.Invoke(this, themeChangedArgs);
+            }
         }
     }
 

@@ -1,55 +1,137 @@
-﻿@page "/work"
+﻿@using DiegoG.Finance.Blazor.Components
+@using GLV.Shared.Common;
+@using GLV.Shared.Blazor;
+@using DiegoG.Finance.Blazor.Services;
+@page "/work"
 
-<PageTitle>@Language.CurrentLanguage.ShortSiteTitle</PageTitle>
+<link rel="stylesheet" href="css/work.css" />
+
+<PageTitle>@Context.CurrentLanguage.ShortSiteTitle</PageTitle>
 
 <div class="container worktable-container worktable-sheet-title">
     <div class="row">
-        <div class="col-4"><h2>@WorkTable.CurrentSheet.Name</h2></div>
-        <div class="col-2">@WorkTable.CurrentSheet.SpendingTrackers</div>
+        <div class="col-5 worktable worktable-title">@WorkTable.CurrentSheet.Title</div>
+        <div class="col-3 worktable worktable-currency">@WorkTable.CurrentSheet.Currency.EnglishName @(WorkTable.CurrentSheet.Currency.Symbol)@WorkTable.CurrentSheet.Currency.Code</div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <p class="small">@(Context.CurrentLanguage.CreatedDate): @WorkTable.CurrentSheet.Created.ToFullDateTimeWithTimeZone(Context.CurrentLanguage.Culture)</p>
+        </div>
     </div>
 </div>
 
 <div class="worktable worktable-container worktable-tracker-sheet worktable-@CollapseControls[0].CollapseClass">
     <div class="container">
         <div class="row worktable worktable-header">
-            <table>
-                @foreach (var item in WorkTable.CurrentSheet.SpendingTrackers.IncomeSources.GetAmountsAsMoney())
+            <table class="col">
+                @foreach (var item in WorkTable.CurrentSheet.SpendingTrackers.IncomeSources)
                 {
-                    <thead>@item.Label</thead><tr>@item.Money</tr>
+                    <tr>
+                        <th>@item.Label</th>
+                        <td>@item.Amount</td>
+                    </tr>
                 }
+                <tr class="total">
+                    <th>Total</th>
+                    <td>@WorkTable.CurrentSheet.SpendingTrackers.IncomeSources.Total</td>
+                </tr>
                 <!--Implement Input-->
+                <!--Total-->
             </table>
+            <div class="col">
+            </div>
+            <div class="col">
+            </div>
         </div>
         <div class="row worktable worktable-body">
             <div class="col worktable worktable-expense-categories">
-                <div class="row">
-                    @foreach(var category in WorkTable.CurrentSheet.SpendingTrackers.ExpenseCategories)
+                    @foreach (var categoryBundle in WorkTable.SpendingTrackerSheetControls.EnumerateExpenseCategories())
                     {
-                        <div class="col worktable worktable-expense-category">
-                            <div class="worktable worktable-expense-category-title">
-                                <h3>@category.Key</h3>
-                            </div>
-                            <div class="worktable worktable-expense-category-table">
-                                @foreach(var (label, money) in category.Value)
-                                {
-                                    <thead>@label</thead><tr>@money</tr>
+                    <div class="row">
+                        @foreach (var category in categoryBundle)
+                        {
+                            <style>
+                                #result-@category.Id:hover, #table-@category.Id:hover {
+                                    transform: scale(1.05, 1.05);
                                 }
-                                <!--Implement Input-->
+
+                                body:has(#table-@category.Id:hover) #result-@category.Id, body:has(#result-@category.Id:hover) #table-@category.Id {
+                                    transform: scale(1.05, 1.05);
+                                }
+                            </style>
+                            <div class="col worktable-expense-category" id="table-@category.Id">
+                                <div class="title" style="@category.Style">
+                                    <input type="text" class="worksheet-text-input" @bind-value="category.Category" />
+                                </div>
+                                <table class="container">
+                                    @foreach (var catrow in category.GetRows())
+                                    {
+                                        <tr class="row" style="@catrow.Style">
+                                            @if (catrow.Value is LabeledAmount value)
+                                            {
+                                                <th class="col-9"><input type="text" class="worksheet-text-input" @bind-value="value.Label" /></th>
+                                                <td class="col">@value.Amount</td>
+                                            }
+                                            else
+                                            {
+                                            }
+                                        </tr>
+                                    }
+                                    <!--Implement Input-->
+                                </table>
                             </div>
-                        </div>
+                        }
+                    </div>
                     }
                     <!--Implement Input-->
-                </div>
             </div>
             <div class="col worktable worktable-output">
                 <div class="row">
                     <div class="col worktable worktable-results">
-                        Worktable Results
+                        <table class="container">
+                            <tr class="row results-titles">
+                                <th class="col-8">Category</th>
+                                <td class="col">Goal</td>
+                                <td class="col">Actual</td>
+                                <td class="col">Total</td>
+                            </tr>
+                        @foreach (var item in WorkTable.SpendingTrackerSheetControls.EnumerateSheetResults()) 
+                        {
+                            item.Result.GoalChanged += Result_GoalChanged;
+                            <tr class="row worktable-result-row" id="result-@item.Id">
+                                <th class="col" style="@item.Style">
+                                    <input class="worksheet-text-input" @bind-value="item.Category" />
+                                </th>
+                                <td class="col" style="@item.Lighter">
+                                    <input class="worksheet-text-input" @bind-value="item.Goal" />
+                                </td>
+                                <td class="col" style="@item.Lighter">
+                                    @item.Result.ActualPercentage
+                                </td>
+                                <td class="col" style="@item.Lighter">
+                                    @item.Result.Total.Amount
+                                </td>
+                            </tr>
+                        }
+                            <tr class="row results-extra">
+                                <th class="col">
+                                </th>
+                                <td class="col">
+                                    Remaining
+                                </td>
+                                <td class="col">
+                                    @WorkTable.CurrentSheet.SpendingTrackers.Results.RemainingPercentage
+                                </td>
+                                <td class="col">
+                                    @WorkTable.CurrentSheet.SpendingTrackers.Results.Remaining
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col worktable worktable-extra">
-                        Worktable Extra
+
                     </div>
                 </div>
             </div>
@@ -61,7 +143,7 @@
         <div class="row">
             <div class="col worktable-meta">
                 <p>
-                    @(Language.CurrentLanguage.WorkSheetVersion): @WorkTable.CurrentSheet.Version
+                    @(Context.CurrentLanguage.WorkSheetVersion): @WorkTable.CurrentSheet.Version
                 </p>
             </div>
         </div>

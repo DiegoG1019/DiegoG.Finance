@@ -37,20 +37,16 @@ public abstract class CategorizedFinancialCollection<T> : IReadOnlyDictionary<st
 
     IEnumerable<T> IReadOnlyDictionary<string, T>.Values => _categories.Values;
 
-    public event Action<CategorizedFinancialCollection<T>, NotifyCollectionChangedAction, KeyValuePair<string, T>?>? CollectionChanged;
-
     public virtual T Add(string key)
     {
         var val = ValueFactory(key);
         _categories.Add(key, val);
-        CollectionChanged?.Invoke(this, NotifyCollectionChangedAction.Add, new(key, val));
         return val;
     }
 
     public virtual void Clear()
     {
         _categories.Clear();
-        CollectionChanged?.Invoke(this, NotifyCollectionChangedAction.Reset, null);
     }
 
     public bool ContainsKey(string key) => _categories.ContainsKey(key);
@@ -65,15 +61,8 @@ public abstract class CategorizedFinancialCollection<T> : IReadOnlyDictionary<st
         return _categories.GetEnumerator();
     }
 
-    public virtual bool Remove(string key, [MaybeNullWhen(false)] out T value)
-    {
-        if (_categories.Remove(key, out value))
-        {
-            CollectionChanged?.Invoke(this, NotifyCollectionChangedAction.Remove, new(key, value));
-            return true;
-        }
-        return false;
-    }
+    public virtual bool Remove(string key, [MaybeNullWhen(false)] out T value) 
+        => _categories.Remove(key, out value);
 
     public bool TryGetValue(string key, [MaybeNullWhen(false)] out T value) => _categories.TryGetValue(key, out value);
 

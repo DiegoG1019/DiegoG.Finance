@@ -13,6 +13,9 @@ public readonly record struct Percentage(decimal ValueOverHundred)
     public decimal ValueOverHundred { get; } = ValueOverHundred;
     public decimal PercentageValue => ValueOverHundred * 100;
 
+    public override string ToString()
+        => ValueOverHundred.ToString("0.##%");
+
     public static Percentage FromRatio(decimal a, decimal b)
         => new(a / b);
 

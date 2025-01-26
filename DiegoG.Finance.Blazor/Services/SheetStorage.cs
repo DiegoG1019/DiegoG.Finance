@@ -46,5 +46,8 @@ public class WorkSheetStorage(ILocalStorageService storage)
     }
 
     public async Task StoreSheet(WorkSheet sheet)
-        => await storage.SetItemAsStringAsync(sheet.Name, await MessagePackFinance.PackAndWriteToBase64(sheet));
+        => await storage.SetItemAsStringAsync(sheet.Title, await MessagePackFinance.PackAndWriteToBase64(sheet));
+
+    public static string GetDefaultFileName(WorkSheet sheet)
+        => $"{sheet.Title}.dgfinance";
 }

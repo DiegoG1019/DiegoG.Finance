@@ -1,0 +1,138 @@
+﻿.worktable {
+    /*border: 4px solid red;*/
+}
+
+.worktable-sheet-title {
+    box-sizing: content-box;
+}
+
+.worktable-header {
+}
+
+    .worktable-header table {
+    }
+
+        .worktable-header table > tr {
+            height: 1.5em;
+        }
+
+        .worktable-header table > tr * {
+            color: black;
+        }
+
+            .worktable-header table > tr > th {
+                background-color: #cfe2f3;
+            }
+
+            .worktable-header table > tr > td {
+                background-color: #cfe2f3;
+            }
+
+            .worktable-header table > tr.total > * {
+                background-color: #9fc5e8;
+            }
+
+.worktable-results {
+
+}
+
+    .worktable-results table {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .worktable-results table > tr {
+            height: 1.5em;
+            width: 100%;
+            margin: .25em 0px .25em 0px;
+        }
+
+            .worktable-results table > tr.results-titles > * {
+                color: inherit;
+            }
+
+            .worktable-results table > tr.results-titles > th {
+                width: 18.5em;
+            }
+
+            .worktable-results table > tr.results-extra > * {
+                color: inherit;
+            }
+
+            .worktable-results table > tr > * {
+            }
+
+
+            .worktable-results table > tr > th {
+                color: black;
+                background-color: var(--category-color);
+                border: 3px solid var(--category-color);
+            }
+
+                .worktable-results table > tr > th > input {
+                    font-weight: bold;
+                    width: 15em;
+                }
+
+            .worktable-results table > tr > td {
+                color: black;
+                border: 3px solid var(--category-border-color);
+                background-color: var(--category-color);
+            }
+
+                .worktable-results table > tr > td > input {
+                    width: 5em;
+                }
+
+[id^="result-"], [id^="table-"] {
+    transition: border ease-in-out 0.15s, height ease-in-out 0.15s, width ease-in-out 0.15s, color ease-in-out 0.15s, transform ease-in-out 0.15s;
+}
+
+.worksheet-text-input {
+    background-color: transparent;
+    border: none;
+}
+
+.worktable-expense-category {
+    background-color: var(--category-color);
+    padding: 0;
+    color: black;
+    width: 2rem;
+    border: 1px solid black;
+}
+
+    .worktable-expense-category .title {
+        background-color: var(--category-color);
+        justify-content: center;
+        display: flex;
+    }
+
+        .worktable-expense-category .title input {
+            font-weight: bold;
+            text-align: center;
+        }
+
+    .worktable-expense-category > table {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .worktable-expense-category > table > tr {
+            background-color: var(--category-row-color);
+            height: 1.5em;
+        }
+
+            .worktable-expense-category > table > tr > * {
+            }
+
+            .worktable-expense-category > table > tr > th {
+                padding-left: 1rem;
+            }
+
+                .worktable-expense-category > table > tr > th > input {
+                    padding: 0;
+                }
+
+            .worktable-expense-category > table > tr > td {
+                text-align: right;
+            }

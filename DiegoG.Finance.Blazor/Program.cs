@@ -13,7 +13,7 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
         builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-        builder.Services.AddCascadingValue(sp => new LanguageProvider());
+        builder.Services.AddCascadingValue(sp => new ContextProvider());
         builder.Services.AddCascadingValue(sp => new WorkTable());
         builder.Services.AddBlazoredLocalStorage();
         builder.Services.AddScoped<WorkSheetStorage>();
