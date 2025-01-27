@@ -13,9 +13,8 @@ public class SpendingTrackerSheetConverter : JsonConverter<SpendingTrackerSheet>
     {
         var buffer = JsonSerializer.Deserialize<SpendingTrackerSheetBuffer>(ref reader, options);
         return new SpendingTrackerSheet(
-            buffer.Currency,
-            new MoneyCollection(buffer.Currency, buffer.IncomeSources),
-            new CategorizedMoneyCollection(buffer.Currency, buffer.ExpenseCategories)
+            new MoneyCollection(buffer.IncomeSources),
+            new CategorizedMoneyCollection(buffer.ExpenseCategories)
         );
     }
 
@@ -23,7 +22,6 @@ public class SpendingTrackerSheetConverter : JsonConverter<SpendingTrackerSheet>
     {
         var buffer = new SpendingTrackerSheetBuffer()
         {
-            Currency = value.Currency,
             ExpenseCategories = value.ExpenseCategories._categories,
             IncomeSources = value.IncomeSources._moneylist
         };

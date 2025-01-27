@@ -18,24 +18,12 @@ public sealed class MoneyCollectionFormatter : IMessagePackFormatter<MoneyCollec
             writer.WriteNil();
         else
         {
-            CurrencyFormatter.Instance.Serialize(ref writer, value.Currency, options);
             MessagePackSerializer.Serialize(ref writer, value._moneylist, options);
         }
     }
 
-    internal static MoneyCollection? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options, IInternalMoneyCollectionParent? parent)
+    public MoneyCollection? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
         => reader.IsNil
             ? null
-            : parent is null 
-                ? new MoneyCollection(
-                    CurrencyFormatter.Instance.Deserialize(ref reader, options),
-                    MessagePackSerializer.Deserialize<HashSet<LabeledAmount>>(ref reader, options)
-                )
-                : new MoneyCollection(
-                    parent,
-                    MessagePackSerializer.Deserialize<HashSet<LabeledAmount>>(ref reader, options)
-                );
-
-    public MoneyCollection? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
-        => Deserialize(ref reader, options, null);
+            : new MoneyCollection(MessagePackSerializer.Deserialize<HashSet<LabeledAmount>>(ref reader, options));
 }

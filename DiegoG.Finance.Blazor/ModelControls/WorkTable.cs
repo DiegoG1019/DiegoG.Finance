@@ -1,6 +1,7 @@
-﻿using NodaMoney;
+﻿using DiegoG.Finance.Blazor.ModelControls.SpendingTrackerSheet;
+using NodaMoney;
 
-namespace DiegoG.Finance.Blazor.Services;
+namespace DiegoG.Finance.Blazor.ModelControls;
 
 public class WorkTable
 {
@@ -41,27 +42,14 @@ public class WorkTable
         get => field;
         set
         {
-            if (field is not null)
-                field.WorkSheetSpendingTrackerSheetMemberChanged -= WorkTable_WorkSheetSpendingTrackerSheetMemberChanged;
-
             field = value;
-
-            if (value is not null)
-                value.WorkSheetSpendingTrackerSheetMemberChanged += WorkTable_WorkSheetSpendingTrackerSheetMemberChanged;
-
             CurrentSheetChanged?.Invoke();
         }
-    }
-
-    private void WorkTable_WorkSheetSpendingTrackerSheetMemberChanged(WorkSheet obj)
-    {
-        CurrentSheetMemberChanged?.Invoke();
     }
 
     public SpendingTrackerSheetControls SpendingTrackerSheetControls { get; }
 
     public event Action? CurrentSheetChanged;
-    public event Action? CurrentSheetMemberChanged;
 
     public void PreAnalyzeSheet()
     {

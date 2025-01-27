@@ -6,27 +6,17 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static DiegoG.Finance.WorkSheet;
 
 namespace DiegoG.Finance;
 
-public class WorkSheet : IFinancialWork, IInternalSpendingTrackerSheetParent
+public class WorkSheet
 {
     public delegate void WorkSheetPropertyChangedEventHandler(WorkSheet sender, string property);
 
     internal WorkSheet(int version, SpendingTrackerSheet? spendingTrackers)
     {
         Version = version;
-        internal_SpendingTrackerSheetMemberChanged = new(handler_internal_WorkSheetSpendingTrackerSheetMemberChanged);
-        if (spendingTrackers is not null)
-        {
-            spendingTrackers.Parent = this;
-            SpendingTrackers = spendingTrackers;
-        }
-        else
-            SpendingTrackers = new SpendingTrackerSheet(null, null, null);
-
-        SpendingTrackers.Parent = this;
+        SpendingTrackers = spendingTrackers is not null ? spendingTrackers : new SpendingTrackerSheet();
     }
 
     public WorkSheet(Currency? currency = null) : this(1, null)
@@ -62,16 +52,7 @@ public class WorkSheet : IFinancialWork, IInternalSpendingTrackerSheetParent
     }
 
     public event WorkSheetPropertyChangedEventHandler? WorkSheetPropertyChanged;
-    public event Action<WorkSheet>? WorkSheetSpendingTrackerSheetMemberChanged;
 
     public static string GetPlaceholderName(DateTimeOffset created)
         => $"DiegoG.Finance Worksheet {created.ToString("s", CultureInfo.CurrentCulture).Replace(':', '.')}";
-
-    private readonly ReferredReference<Action<SpendingTrackerSheet>> internal_SpendingTrackerSheetMemberChanged;
-
-    private void handler_internal_WorkSheetSpendingTrackerSheetMemberChanged(SpendingTrackerSheet sheet)
-        => WorkSheetSpendingTrackerSheetMemberChanged?.Invoke(this);
-
-    ReferredReference<Action<SpendingTrackerSheet>> IInternalSpendingTrackerSheetParent.Internal_MemberChanged
-        => internal_SpendingTrackerSheetMemberChanged;
 }

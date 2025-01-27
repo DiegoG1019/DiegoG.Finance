@@ -62,7 +62,4 @@ public sealed class SpendingTrackerSheetResults : IReadOnlyDictionary<string, Sp
 
     [JsonIgnore]
     public decimal Remaining => Sheet.IncomeSources.Total - Sheet.ExpenseCategories.Total;
-
-    [JsonIgnore]
-    public Money RemainingMoney => new(Remaining, Sheet.Currency);
 }

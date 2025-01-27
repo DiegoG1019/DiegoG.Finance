@@ -1,5 +1,4 @@
-﻿using DiegoG.Finance.Results;
-using GLV.Shared.Blazor;
+﻿using GLV.Shared.Blazor;
 using GLV.Shared.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -8,71 +7,18 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace DiegoG.Finance.Blazor.Services;
+namespace DiegoG.Finance.Blazor.ModelControls.SpendingTrackerSheet;
 
 public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
 {
     [ThreadStatic] private static StringBuilder? StyleBuilder;
 
-    public sealed record class SheetResultInfo(
-        SpendingTrackerCategoryResult Result,
-        string Style,
-        string Lighter,
-        int Id
-    )
-    {
-        public string Category
-        {
-            get => Result.Collection.Category!;
-            set => Result.CategorizedMoneyCollection.Rename(Result.Collection.Category!, value);
-        }
-
-        public string Goal
-        {
-            get => Result.Goal.ToString();
-            set
-            {
-                if (decimal.TryParse(value[^1] == '%' ? value.AsSpan()[..^1] : value, out var dec))
-                    Result.Goal = Percentage.FromPercentageValue(dec);
-            }
-        }
-    }
-
-    public sealed record class ExpenseCategoryInfo(
-        MoneyCollection Money,
-        string Style, 
-        int LongestTable, 
-        string LightRowColor,
-        string DarkRowColor,
-        CategorizedMoneyCollection Collection,
-        int Id
-    )
-    {
-        public string Category
-        {
-            get => Money.Category ?? "?";
-            set => Collection.Rename(Money.Category!, value);
-        }
-
-        public readonly record struct ExpenseCategoryRow(LabeledAmount? Value, string Style);
-        public IEnumerable<ExpenseCategoryRow> GetRows()
-        {
-            int count = 0;
-            foreach (var mon in Money)
-                yield return new ExpenseCategoryRow(
-                    mon,
-                    count++ % 2 == 0 ? LightRowColor : DarkRowColor
-                );
-
-            for (; count < LongestTable; count++)
-                yield return new(
-                    null,
-                    count % 2 == 0 ? LightRowColor : DarkRowColor
-                );
-        }
-    }
-
     public int LongestTable { get; private set; }
+
+    public void AddCategory()
+    {
+        WorkTable.CurrentSheet?.SpendingTrackers.ExpenseCategories.Add($"New Sheet [{Random.Shared.Next(0, 9999)}]");
+    }
 
     public static string GetStyleVariablesForCategoryResult(string category, out string lighter)
     {
@@ -147,7 +93,7 @@ public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
         }
     }
 
-    private IEnumerable<ExpenseCategoryInfo> GetInnerExpenseCategories(IEnumerator<ExpenseCategoryInfo> enumerator)
+    private static IEnumerable<ExpenseCategoryInfo> GetInnerExpenseCategories(IEnumerator<ExpenseCategoryInfo> enumerator)
     {
         int i = 0;
         do
@@ -171,6 +117,13 @@ public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
                 cat.Value.GetHashCode()
             );
         }
+    }
+
+    public IEnumerable<LabeledAmountInfo> EnumerateAmounts(MoneyCollection collection)
+    {
+        Debug.Assert(WorkTable?.CurrentSheet?.SpendingTrackers is not null);
+        foreach (var cat in collection)
+            yield return new LabeledAmountInfo(cat, collection);
     }
 
     public IEnumerable<IEnumerable<ExpenseCategoryInfo>> EnumerateExpenseCategories()

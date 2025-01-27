@@ -1,6 +1,8 @@
-﻿using DiegoG.Finance.Blazor.Services;
+﻿using DiegoG.Finance.Blazor.ModelControls;
+using DiegoG.Finance.Blazor.Services;
 using DiegoG.Finance.Results;
 using Microsoft.AspNetCore.Components;
+using System.Collections.Specialized;
 
 namespace DiegoG.Finance.Blazor.Pages;
 
@@ -18,10 +20,12 @@ public partial class WorkTablePage(ILogger<WorkTablePage> log)
     {
         Context.PropertyChanged += Language_PropertyChanged;
         WorkTable.PreAnalyzeSheet();
-        WorkTable.CurrentSheetMemberChanged += WorkTable_CurrentSheetMemberChanged;
+        WorkTable.CurrentSheetChanged += WorkTable_CurrentSheetChanged;
     }
 
-    private void WorkTable_CurrentSheetMemberChanged()
+    #region Event Handlers
+
+    private void WorkTable_CurrentSheetChanged()
     {
         StateHasChanged();
         log?.LogDebug("Reloaded CurrentSheet");
@@ -33,9 +37,15 @@ public partial class WorkTablePage(ILogger<WorkTablePage> log)
         log?.LogDebug("Reloaded CurrentSheet due to LanguageChange");
     }
 
-    private void Result_GoalChanged(SpendingTrackerCategoryResult result, Percentage old, Percentage @new)
+    private void FinancialCollectionEventHandler<TSender, TItem>(TSender sender, NotifyCollectionChangedAction Action, TItem? item)
     {
         StateHasChanged();
-        log?.LogDebug("Reloaded CurrentSheet due to Result Goal Change");
     }
+
+    private void FinancialWorkEventHandler<TSender, TValue>(TSender result, TValue old, TValue @new)
+    {
+        StateHasChanged();
+    }
+
+    #endregion
 }

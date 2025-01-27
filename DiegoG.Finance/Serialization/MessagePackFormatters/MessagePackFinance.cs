@@ -52,14 +52,12 @@ public static class MessagePackFinance
 
     public static ValueTask<WorkSheet> ReadPackedBase64(string str)
     {
-        byte[]? rented = null;
+        var stringByteLen = Encoding.UTF8.GetByteCount(str);
+        var b64Buffer = ArrayPool<byte>.Shared.Rent(stringByteLen);
         try
         {
-            var stringByteLen = Encoding.UTF8.GetByteCount(str);
-            var b64Buffer = new byte[stringByteLen];
-
-            Encoding.UTF8.GetBytes(str, b64Buffer);
-            var b64Status = Base64.DecodeFromUtf8InPlace(b64Buffer, out int written); // It's now raw bytes, but they're still compressed
+            int written = Encoding.UTF8.GetBytes(str, b64Buffer);
+            var b64Status = Base64.DecodeFromUtf8InPlace(b64Buffer.AsSpan(0, written), out written); // It's now raw bytes, but they're still compressed
             Debug.Assert(b64Status == OperationStatus.Done);
 
             using var mem = new MemoryStream(b64Buffer, 0, written);
@@ -68,21 +66,18 @@ public static class MessagePackFinance
         }
         finally
         {
-            if (rented is not null)
-                ArrayPool<byte>.Shared.Return(rented);
+            ArrayPool<byte>.Shared.Return(b64Buffer);
         }
     }
 
     public static ValueTask<WorkSheetHeader> ReadPackedBase64Header(string str)
     {
-        byte[]? rented = null;
+        var stringByteLen = Encoding.UTF8.GetByteCount(str);
+        var b64Buffer = ArrayPool<byte>.Shared.Rent(stringByteLen);
         try
         {
-            var stringByteLen = Encoding.UTF8.GetByteCount(str);
-            var b64Buffer = new byte[stringByteLen];
-
-            Encoding.UTF8.GetBytes(str, b64Buffer);
-            var b64Status = Base64.DecodeFromUtf8InPlace(b64Buffer, out int written); // It's now raw bytes, but they're still compressed
+            int written = Encoding.UTF8.GetBytes(str, b64Buffer);
+            var b64Status = Base64.DecodeFromUtf8InPlace(b64Buffer.AsSpan(0, written), out written); // It's now raw bytes, but they're still compressed
             Debug.Assert(b64Status == OperationStatus.Done);
 
             using var mem = new MemoryStream(b64Buffer, 0, written);
@@ -91,8 +86,7 @@ public static class MessagePackFinance
         }
         finally
         {
-            if (rented is not null)
-                ArrayPool<byte>.Shared.Return(rented);
+            ArrayPool<byte>.Shared.Return(b64Buffer);
         }
     }
 }

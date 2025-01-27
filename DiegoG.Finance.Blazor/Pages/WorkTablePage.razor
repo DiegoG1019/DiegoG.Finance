@@ -24,11 +24,17 @@
     <div class="container">
         <div class="row worktable worktable-header">
             <table class="col">
-                @foreach (var item in WorkTable.CurrentSheet.SpendingTrackers.IncomeSources)
+                @foreach (var item in WorkTable.SpendingTrackerSheetControls.EnumerateAmounts(WorkTable.CurrentSheet.SpendingTrackers.IncomeSources))
                 {
+                    item.LabeledAmount.LabelChanged += FinancialWorkEventHandler;
+                    item.LabeledAmount.AmountChanged += FinancialWorkEventHandler;
                     <tr>
-                        <th>@item.Label</th>
-                        <td>@item.Amount</td>
+                        <th>
+                            <input class="worksheet-text-input" @bind-value="item.Label" />
+                        </th>
+                        <td>
+                            <input type="number" class="worksheet-text-input" @bind-value="item.Amount" />
+                        </td>
                     </tr>
                 }
                 <tr class="total">
@@ -45,18 +51,21 @@
         </div>
         <div class="row worktable worktable-body">
             <div class="col worktable worktable-expense-categories">
-                    @foreach (var categoryBundle in WorkTable.SpendingTrackerSheetControls.EnumerateExpenseCategories())
-                    {
+                @foreach (var categoryBundle in WorkTable.SpendingTrackerSheetControls.EnumerateExpenseCategories())
+                {
                     <div class="row">
                         @foreach (var category in categoryBundle)
                         {
+                            category.Money.CollectionChanged += FinancialCollectionEventHandler;
+                            category.Collection.CollectionChanged += FinancialCollectionEventHandler;
+
                             <style>
                                 #result-@category.Id:hover, #table-@category.Id:hover {
-                                    transform: scale(1.05, 1.05);
+                                transform: scale(1.05, 1.05);
                                 }
 
                                 body:has(#table-@category.Id:hover) #result-@category.Id, body:has(#result-@category.Id:hover) #table-@category.Id {
-                                    transform: scale(1.05, 1.05);
+                                transform: scale(1.05, 1.05);
                                 }
                             </style>
                             <div class="col worktable-expense-category" id="table-@category.Id">
@@ -67,10 +76,16 @@
                                     @foreach (var catrow in category.GetRows())
                                     {
                                         <tr class="row" style="@catrow.Style">
-                                            @if (catrow.Value is LabeledAmount value)
+                                            @if (catrow.Value is not null)
                                             {
-                                                <th class="col-9"><input type="text" class="worksheet-text-input" @bind-value="value.Label" /></th>
-                                                <td class="col">@value.Amount</td>
+                                                catrow.Value.LabeledAmount.LabelChanged += FinancialWorkEventHandler;
+                                                catrow.Value.LabeledAmount.AmountChanged += FinancialWorkEventHandler;
+                                                <th class="col-3">
+                                                    <input type="text" class="worksheet-text-input" @bind-value="catrow.Value.Label" />
+                                                </th>
+                                                <td class="col">
+                                                    <input type="number" class="worksheet-text-input" @bind-value="catrow.Value.Amount" />
+                                                </td>
                                             }
                                             else
                                             {
@@ -94,10 +109,11 @@
                                 <td class="col">Goal</td>
                                 <td class="col">Actual</td>
                                 <td class="col">Total</td>
+                                <td class="col-1"></td>
                             </tr>
                         @foreach (var item in WorkTable.SpendingTrackerSheetControls.EnumerateSheetResults()) 
                         {
-                            item.Result.GoalChanged += Result_GoalChanged;
+                            item.Result.GoalChanged += FinancialWorkEventHandler;
                             <tr class="row worktable-result-row" id="result-@item.Id">
                                 <th class="col" style="@item.Style">
                                     <input class="worksheet-text-input" @bind-value="item.Category" />
@@ -109,12 +125,15 @@
                                     @item.Result.ActualPercentage
                                 </td>
                                 <td class="col" style="@item.Lighter">
-                                    @item.Result.Total.Amount
+                                    @item.Result.Total
+                                </td>
+                                <td class="col-1 remove-btn" style="@item.Style">
+                                    <button type="button" class="btn-close" aria-label="Close" @onclick="item.DeleteCategory"></button>
                                 </td>
                             </tr>
                         }
                             <tr class="row results-extra">
-                                <th class="col">
+                                <th class="col-6">
                                 </th>
                                 <td class="col">
                                     Remaining
@@ -124,6 +143,9 @@
                                 </td>
                                 <td class="col">
                                     @WorkTable.CurrentSheet.SpendingTrackers.Results.Remaining
+                                </td>
+                                <td class="col-1">
+                                    <button type="button" class="btn btn-outline-primary" aria-label="New" @onclick="WorkTable.SpendingTrackerSheetControls.AddCategory">+</button>
                                 </td>
                             </tr>
                         </table>

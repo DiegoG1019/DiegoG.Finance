@@ -12,49 +12,34 @@ using static DiegoG.Finance.MoneyCollection;
 
 namespace DiegoG.Finance;
 
-public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCollection>, IFinancialWork, IInternalMoneyCollectionParent
+public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCollection>
 {
-    private ReferredReference<MoneyCollectionTotalChangedEventHandler> MoneyTotalChanged;
+    private ReferredReference<MoneyCollectionTotalChangedEventHandler> Internal_Handler_MoneyTotalChanged;
 
     internal ReferredReference<FinancialCollectionChangedEventHandler<CategorizedMoneyCollection, KeyValuePair<string, MoneyCollection>>>? Internal_CollectionChanged;
 
     internal ReferredReference<CategorizedMoneyCollectionInnerCollectionChangedEventHandler>? Internal_InnerCollectionChanged;
-    internal ReferredReference<Action<MoneyCollection, LabeledAmount>> __internal_MoneyCollectionEventPropagationHandler;
-
-    internal IInternalCategorizedMoneyCollectionParent? Parent;
 
     public delegate void CategorizedMoneyCollectionTotalChangedEventHandler(CategorizedMoneyCollection sender, MoneyCollection moneyCollection, decimal difference);
 
     public delegate void CategorizedMoneyCollectionInnerCollectionChangedEventHandler(CategorizedMoneyCollection sender, MoneyCollection moneyCollection, NotifyCollectionChangedAction action);
 
-    internal CategorizedMoneyCollection(Currency currency, Dictionary<string, MoneyCollection> categories) : base(categories)
+    internal CategorizedMoneyCollection(Dictionary<string, MoneyCollection> categories) : base(categories)
     {
-        MoneyTotalChanged = new(Val_TotalChanged);
-        __internal_MoneyCollectionEventPropagationHandler = new(moneyCollectionEventPropagationHandler);
+        Internal_Handler_MoneyTotalChanged = new(Val_TotalChanged);
 
-        Currency = currency;
         RecalculateTotal();
         foreach (var x in _categories.Values)
-        {
-            x.Internal_TotalChanged = MoneyTotalChanged;
-            x.Parent = this;
-        }
+            x.Internal_TotalChanged = Internal_Handler_MoneyTotalChanged;
     }
 
-    public CategorizedMoneyCollection(Currency currency) : base()
+    public CategorizedMoneyCollection() : base()
     {
-        MoneyTotalChanged = new(Val_TotalChanged);
-        __internal_MoneyCollectionEventPropagationHandler = new(moneyCollectionEventPropagationHandler);
-
-        Currency = currency;
+        Internal_Handler_MoneyTotalChanged = new(Val_TotalChanged);
     }
-
-    public Currency Currency => Parent?.Currency ?? field;
 
     public decimal Total { get; private set; }
-
-    public Money MoneyTotal => new(Total, Currency);
-
+    
     public void EnsureCapacity(int capacity)
         => _categories.EnsureCapacity(capacity);
 
@@ -65,11 +50,10 @@ public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCo
     }
 
     protected override MoneyCollection ValueFactory(string key)
-        => new(Currency)
+        => new()
         {
-            Internal_TotalChanged = MoneyTotalChanged,
-            Category = key,
-            Parent = this
+            Internal_TotalChanged = Internal_Handler_MoneyTotalChanged,
+            Category = key
         };
 
     public override MoneyCollection Add(string key)
@@ -82,8 +66,7 @@ public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCo
     public override void Clear()
     {
         base.Clear();
-        MoneyTotalChanged = new(Val_TotalChanged);
-        __internal_MoneyCollectionEventPropagationHandler = new(moneyCollectionEventPropagationHandler);
+        Internal_Handler_MoneyTotalChanged = new(Val_TotalChanged);
         RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Reset, default);
     }
 
@@ -110,6 +93,7 @@ public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCo
     {
         if (base.Remove(key, out value)) 
         {
+            Val_TotalChanged(value, -value.Total);
             value.Internal_TotalChanged = null;
             value.Category = null;
             RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Remove, new(key, value));
@@ -133,23 +117,10 @@ public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCo
 
     private void RaiseCollectionChangedEvent(NotifyCollectionChangedAction action, KeyValuePair<string, MoneyCollection> item)
     {
-        Parent?.Internal_MemberChanged?.Value?.Invoke(this, item.Value);
         Internal_CollectionChanged?.Value?.Invoke(this, action, item);
         CollectionChanged?.Invoke(this, action, item);
     }
 
-    private void RaiseCategorizedMoneyCollectionMemberEvent(CategorizedMoneyCollection collection, KeyValuePair<string, MoneyCollection> item)
-    {
-        Parent?.Internal_MemberChanged?.Value?.Invoke(this, item.Value);
-        CollectionChanged?.Invoke(this, NotifyCollectionChangedAction.Replace, item);
-    }
-
-    private void moneyCollectionEventPropagationHandler(MoneyCollection c, LabeledAmount l)
-        => RaiseCategorizedMoneyCollectionMemberEvent(this, new (c.Category!, c));
-
     public event CategorizedMoneyCollectionTotalChangedEventHandler? TotalChanged;
     public event FinancialCollectionChangedEventHandler<CategorizedMoneyCollection, KeyValuePair<string, MoneyCollection>>? CollectionChanged;
-
-    ReferredReference<Action<MoneyCollection, LabeledAmount>> IInternalMoneyCollectionParent.Internal_MemberChanged
-        => __internal_MoneyCollectionEventPropagationHandler;
 }

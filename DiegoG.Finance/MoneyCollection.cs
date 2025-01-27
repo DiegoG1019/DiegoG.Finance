@@ -8,11 +8,9 @@ using System.Text.Json.Serialization;
 
 namespace DiegoG.Finance;
 
-public class MoneyCollection : IReadOnlyCollection<LabeledAmount>, IFinancialWork, IInternalLabeledAmountParent
+public class MoneyCollection : IReadOnlyCollection<LabeledAmount>
 {
     internal protected readonly HashSet<LabeledAmount> _moneylist;
-
-    internal readonly ReferredReference<Action<LabeledAmount, decimal>> __internal_amountchanged;
 
     public delegate void MoneyCollectionTotalChangedEventHandler(MoneyCollection sender, decimal difference);
     public delegate void MoneyCollectionCurrencyChangedEventHandler(MoneyCollection sender, Currency newCurrency);
@@ -25,38 +23,23 @@ public class MoneyCollection : IReadOnlyCollection<LabeledAmount>, IFinancialWor
     /// </remarks>
     public event Action<MoneyCollection, decimal>? TotalChanged;
     internal ReferredReference<MoneyCollectionTotalChangedEventHandler>? Internal_TotalChanged;
-    internal IInternalMoneyCollectionParent? Parent;
+    internal ReferredReference<FinancialWorkEventHandler<LabeledAmount, decimal>> Internal_Handler_AmountChanged;
 
-    internal MoneyCollection(IInternalMoneyCollectionParent parent, IEnumerable<LabeledAmount>? amounts = null)
+    internal MoneyCollection(IEnumerable<LabeledAmount>? amounts = null)
     {
-        __internal_amountchanged = new(LabeledAmountChanged);
+        Internal_Handler_AmountChanged = new(LabeledAmountChanged);
         _moneylist = amounts is null
                         ? new()
                         : new(amounts);
 
-        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
-        if (Parent == this)
-            throw new ArgumentException("The MoneyCollection's parent cannot be the same instance", nameof(parent));
         RecalculateTotal();
     }
 
-    public MoneyCollection(Currency currency, IEnumerable<LabeledAmount>? amounts)
+    public MoneyCollection()
     {
-        __internal_amountchanged = new(LabeledAmountChanged);
-        _moneylist = amounts is null
-                        ? new()
-                        : new(amounts);
-
-        Currency = currency;
-        RecalculateTotal();
-    }
-
-    public MoneyCollection(Currency currency)
-    {
-        __internal_amountchanged = new(LabeledAmountChanged);
+        Internal_Handler_AmountChanged = new(LabeledAmountChanged);
         _moneylist = [];
 
-        Currency = currency;
         RecalculateTotal();
     }
 
@@ -65,13 +48,13 @@ public class MoneyCollection : IReadOnlyCollection<LabeledAmount>, IFinancialWor
 
     public decimal Total { get; private set; }
 
-    public Currency Currency => Parent?.Currency ?? field;
-
-    public Money MoneyTotal => new(Total, Currency);
-
     public LabeledAmount Add(string label, decimal amount)
     {
-        var item = new LabeledAmount(this, label, amount);
+        var item = new LabeledAmount(label, amount)
+        {
+            Internal_AmountChanged = Internal_Handler_AmountChanged
+        };
+
         _moneylist.Add(item);
         Total += item.Amount;
         RaiseEvent(NotifyCollectionChangedAction.Add, item);
@@ -131,13 +114,12 @@ public class MoneyCollection : IReadOnlyCollection<LabeledAmount>, IFinancialWor
 
     public event FinancialCollectionChangedEventHandler<MoneyCollection, LabeledAmount>? CollectionChanged;
 
-    private void LabeledAmountChanged(LabeledAmount amount, decimal difference)
+    private void LabeledAmountChanged(LabeledAmount amount, decimal old, decimal @new)
     {
-        Parent?.Internal_MemberChanged?.Value?.Invoke(this, amount);
-        Internal_TotalChanged?.Value?.Invoke(this, difference);
-        TotalChanged?.Invoke(this, difference);
+        var diff = @new - old;
+        Total += diff;
+        Internal_TotalChanged?.Value?.Invoke(this, diff);
+        TotalChanged?.Invoke(this, diff);
         CollectionChanged?.Invoke(this, NotifyCollectionChangedAction.Replace, amount);
     }
-
-    ReferredReference<Action<LabeledAmount, decimal>> IInternalLabeledAmountParent.Internal_MemberChanged => __internal_amountchanged;
 }

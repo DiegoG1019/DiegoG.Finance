@@ -12,14 +12,13 @@ public class CategorizedMoneyCollectionConverter : JsonConverter<CategorizedMone
     public override CategorizedMoneyCollection? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var buffer = JsonSerializer.Deserialize<CategorizedMoneyCollectionBuffer>(ref reader, options);
-        return new CategorizedMoneyCollection(buffer.Currency, buffer.Categories);
+        return new CategorizedMoneyCollection(buffer.Categories);
     }
 
     public override void Write(Utf8JsonWriter writer, CategorizedMoneyCollection value, JsonSerializerOptions options)
     {
         var buffer = new CategorizedMoneyCollectionBuffer()
         {
-            Currency = value.Currency,
             Categories = value._categories
         };
         JsonSerializer.Serialize(writer, buffer, options);

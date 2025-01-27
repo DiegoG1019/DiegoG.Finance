@@ -19,7 +19,6 @@ public sealed class SpendingTrackerSheetFormatter : IMessagePackFormatter<Spendi
             writer.WriteNil();
         else
         {
-            CurrencyFormatter.Instance.Serialize(ref writer, value.Currency, options);
             MoneyCollectionFormatter.Instance.Serialize(ref writer, value.IncomeSources, options);
             CategorizedMoneyCollectionFormatter.Instance.Serialize(ref writer, value.ExpenseCategories, options);
         }
@@ -29,7 +28,6 @@ public sealed class SpendingTrackerSheetFormatter : IMessagePackFormatter<Spendi
         => reader.IsNil
             ? null
             : new SpendingTrackerSheet(
-                CurrencyFormatter.Instance.Deserialize(ref reader, options),
                 MoneyCollectionFormatter.Instance.Deserialize(ref reader, options),
                 CategorizedMoneyCollectionFormatter.Instance.Deserialize(ref reader, options)
             );

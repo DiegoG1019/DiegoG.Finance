@@ -9,53 +9,21 @@ using static DiegoG.Finance.WorkSheet;
 
 namespace DiegoG.Finance;
 
-public class SpendingTrackerSheet : IFinancialWork, IInternalCategorizedMoneyCollectionParent, IInternalMoneyCollectionParent
+public class SpendingTrackerSheet
 {
-    private readonly ReferredReference<Action<MoneyCollection, LabeledAmount>> internal_MoneyCollectionMemberChanged;
-    private readonly ReferredReference<Action<CategorizedMoneyCollection, MoneyCollection>> internal_CategorizedMoneyCollectionMemberChanged;
-
-    internal IInternalSpendingTrackerSheetParent? Parent;
-
     internal SpendingTrackerSheet(
-        Currency? currency,
         MoneyCollection? incomeSources,
         CategorizedMoneyCollection? expenseCategories
     )
     {
-        internal_CategorizedMoneyCollectionMemberChanged = new(Handler_internal_CollectionMemberChanged);
-        internal_MoneyCollectionMemberChanged = new(Handler_internal_CollectionMemberChanged);
-
-        if (incomeSources is null)
-            IncomeSources = new(Currency);
-        else
-        {
-            IncomeSources = incomeSources;
-            if (IncomeSources.Parent is not null)
-                throw new ArgumentException($"The MoneyCollection for IncomeSources already has a parent");
-        }
-
-        IncomeSources.Parent = this;
-
-        if (expenseCategories is null)
-            ExpenseCategories = new(Currency);
-        else
-        {
-            ExpenseCategories = expenseCategories;
-            if (ExpenseCategories.Parent is not null)
-                throw new ArgumentException($"The CategorizedMoneyCollection for ExpenseCategories already has a parent");
-        }
-
-        ExpenseCategories.Parent = this;
+        IncomeSources = incomeSources is null ? [] : incomeSources;
+        ExpenseCategories = expenseCategories is null ? ([]) : expenseCategories;
 
         Results = new(this);
-        ExpenseCategories.CollectionChanged += ExpenseCategories_CollectionChanged;
-
-        Currency = currency ?? default;
+        ExpenseCategories.Internal_CollectionChanged = new(ExpenseCategories_CollectionChanged);
     }
 
-    public SpendingTrackerSheet(
-        Currency currency
-    ) : this(currency, null, null) { }
+    public SpendingTrackerSheet() : this(null, null) { }
 
     private void ExpenseCategories_CollectionChanged(
         CategorizedMoneyCollection arg1, 
@@ -79,24 +47,9 @@ public class SpendingTrackerSheet : IFinancialWork, IInternalCategorizedMoneyCol
         }
     }
 
-    public Currency Currency => Parent?.Currency ?? field;
     public MoneyCollection IncomeSources { get; } 
     public CategorizedMoneyCollection ExpenseCategories { get; }
 
     [JsonIgnore]
     public SpendingTrackerSheetResults Results { get; }
-
-    public event Action<SpendingTrackerSheet>? SpendingTrackerSheetMemberChanged;
-
-    private void Handler_internal_CollectionMemberChanged<T1, T2>(T1 _, T2 __)
-    {
-        Parent?.Internal_MemberChanged?.Value?.Invoke(this);
-        SpendingTrackerSheetMemberChanged?.Invoke(this);
-    }
-
-    ReferredReference<Action<MoneyCollection, LabeledAmount>> IInternalMoneyCollectionParent.Internal_MemberChanged
-        => internal_MoneyCollectionMemberChanged;
-
-    ReferredReference<Action<CategorizedMoneyCollection, MoneyCollection>> IInternalCategorizedMoneyCollectionParent.Internal_MemberChanged
-        => internal_CategorizedMoneyCollectionMemberChanged;
 }

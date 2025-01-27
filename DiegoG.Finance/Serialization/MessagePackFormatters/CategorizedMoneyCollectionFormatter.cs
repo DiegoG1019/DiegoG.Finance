@@ -19,7 +19,6 @@ public sealed class CategorizedMoneyCollectionFormatter : IMessagePackFormatter<
             writer.WriteNil();
         else
         {
-            CurrencyFormatter.Instance.Serialize(ref writer, value.Currency, options);
             MessagePackSerializer.Serialize(ref writer, value._categories, options);
         }
     }
@@ -28,7 +27,6 @@ public sealed class CategorizedMoneyCollectionFormatter : IMessagePackFormatter<
         => reader.IsNil
             ? null
             : new CategorizedMoneyCollection(
-                CurrencyFormatter.Instance.Deserialize(ref reader, options),
                 MessagePackSerializer.Deserialize<Dictionary<string, MoneyCollection>>(ref reader, options)
             );
 }

@@ -80,6 +80,17 @@
                 background-color: var(--category-color);
             }
 
+                .worktable-results table > tr > td.remove-btn {
+                    border: none;
+                    align-content:center;
+                    vertical-align: middle;
+                }
+
+                .worktable-results table > tr > td.remove-btn > button {
+                    font-size: 0.8rem;
+                    padding: 0;
+                }
+
                 .worktable-results table > tr > td > input {
                     width: 5em;
                 }
@@ -127,10 +138,20 @@
 
             .worktable-expense-category > table > tr > th {
                 padding-left: 1rem;
+                width: 60%;
             }
 
                 .worktable-expense-category > table > tr > th > input {
                     padding: 0;
+                }
+
+            .worktable-expense-category > table > tr > td {
+                width: 40%;
+            }
+
+                .worktable-expense-category > table > tr > td > input {
+                    padding: 0;
+                    width: 100%;
                 }
 
             .worktable-expense-category > table > tr > td {

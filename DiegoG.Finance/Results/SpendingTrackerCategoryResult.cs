@@ -5,8 +5,6 @@ namespace DiegoG.Finance.Results;
 
 public class SpendingTrackerCategoryResult
 {
-    public delegate void SpendingTrackerCategoryResultEventHandler<TValue>(SpendingTrackerCategoryResult Result, TValue oldValue, TValue newValue);
-
     internal SpendingTrackerCategoryResult(
         Percentage goal,
         MoneyCollection collection,
@@ -38,7 +36,8 @@ public class SpendingTrackerCategoryResult
     }
 
     public Percentage ActualPercentage => Percentage.FromRatio(Collection.Total, Sheet.IncomeSources.Total);
-    public Money Total => Collection.MoneyTotal;
 
-    public event SpendingTrackerCategoryResultEventHandler<Percentage>? GoalChanged;
+    public decimal Total => Collection.Total;
+
+    public event FinancialWorkEventHandler<SpendingTrackerCategoryResult, Percentage>? GoalChanged;
 }

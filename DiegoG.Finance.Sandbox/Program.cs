@@ -22,9 +22,7 @@ internal class Program
         var rent = fundamentals.Add("Rent", 2_000_000);
         fundamentals.Add("Phone", 500_000);
 
-        work.WorkSheetSpendingTrackerSheetMemberChanged += Work_WorkSheetSpendingTrackerSheetMemberChanged;
-
-        rent.Label = "xwasdw";
+        rent.Amount = 231;
 
         var data = MessagePackSerializer.Serialize(sheet);
 
