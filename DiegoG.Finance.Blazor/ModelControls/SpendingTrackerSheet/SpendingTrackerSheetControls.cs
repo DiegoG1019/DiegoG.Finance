@@ -20,6 +20,12 @@ public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
         WorkTable.CurrentSheet?.SpendingTrackers.ExpenseCategories.Add($"New Sheet [{Random.Shared.Next(0, 9999)}]");
     }
 
+    public void AddIncomeSource()
+    {
+        var sources = WorkTable.CurrentSheet?.SpendingTrackers.IncomeSources;
+        sources?.Add($"Source #{sources.Count + 1}", 0);
+    }
+
     public static string GetStyleVariablesForCategoryResult(string category, out string lighter)
     {
         (StyleBuilder ??= new StringBuilder()).Clear();
@@ -108,6 +114,7 @@ public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
         foreach (var cat in collection)
         {
             yield return new(
+                this,
                 cat.Value,
                 GetStyleVariablesForCategory(cat.Key, out var light, out var dark),
                 LongestTable,

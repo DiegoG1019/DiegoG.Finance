@@ -1,6 +1,7 @@
 ﻿namespace DiegoG.Finance.Blazor.ModelControls.SpendingTrackerSheet;
 
 public sealed record class ExpenseCategoryInfo(
+    SpendingTrackerSheetControls Controls,
     MoneyCollection Money,
     string Style,
     int LongestTable,
@@ -14,6 +15,12 @@ public sealed record class ExpenseCategoryInfo(
     {
         get => Money.Category ?? "?";
         set => Collection.Rename(Money.Category!, value);
+    }
+
+    public void AddExpense()
+    {
+        Money.Add($"Expense: #{Money.Count}", 0);
+        Controls.PreAnalyzeSheet();
     }
 
     public readonly record struct ExpenseCategoryRow(LabeledAmountInfo? Value, string Style);

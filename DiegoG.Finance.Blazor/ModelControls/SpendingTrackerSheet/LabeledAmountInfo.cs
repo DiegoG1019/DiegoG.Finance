@@ -5,6 +5,11 @@ public sealed record class LabeledAmountInfo(
     MoneyCollection Collection
 )
 {
+    public void Delete()
+    {
+        Collection.Remove(LabeledAmount);
+    }
+
     public string Label
     {
         get => LabeledAmount.Label;

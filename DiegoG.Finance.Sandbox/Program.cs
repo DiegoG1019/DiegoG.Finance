@@ -22,7 +22,9 @@ internal class Program
         var rent = fundamentals.Add("Rent", 2_000_000);
         fundamentals.Add("Phone", 500_000);
 
-        rent.Amount = 231;
+        Debugger.Break();
+        sheet.ExpenseCategories.Rename("Fun", "Fun't!");
+        Debugger.Break();
 
         var data = MessagePackSerializer.Serialize(sheet);
 
