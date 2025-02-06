@@ -26,8 +26,8 @@
             <table class="col">
                 @foreach (var item in WorkTable.SpendingTrackerSheetControls.EnumerateAmounts(WorkTable.CurrentSheet.SpendingTrackers.IncomeSources))
                 {
-                    item.LabeledAmount.LabelChanged += FinancialWorkEventHandler;
-                    item.LabeledAmount.AmountChanged += FinancialWorkEventHandler;
+                    item.ExpenseCategory.LabelChanged += FinancialWorkEventHandler;
+                    item.ExpenseCategory.AmountChanged += FinancialWorkEventHandler;
                     <tr>
                         <th>
                             <input class="worksheet-text-input" @bind-value="item.Label" />
@@ -76,7 +76,7 @@
                             </style>
                             <div class="col worktable-expense-category" id="table-@category.Id">
                                 <div class="title" style="@category.Style">
-                                    <input type="text" class="worksheet-text-input" @bind-value="category.Category" />
+                                    <input type="text" class="worksheet-text-input" @bind-value="category.ExpenseType" />
                                     <button type="button" class="btn btn-outline-primary" aria-label="New" @onclick="category.AddExpense">+</button>
                                 </div>
                                 <table class="container">
@@ -85,13 +85,16 @@
                                         <tr class="row" style="@catrow.Style">
                                             @if (catrow.Value is not null)
                                             {
-                                                catrow.Value.LabeledAmount.LabelChanged += FinancialWorkEventHandler;
-                                                catrow.Value.LabeledAmount.AmountChanged += FinancialWorkEventHandler;
+                                                catrow.Value.ExpenseCategory.LabelChanged += FinancialWorkEventHandler;
+                                                catrow.Value.ExpenseCategory.AmountChanged += FinancialWorkEventHandler;
                                                 <th class="col-3">
                                                     <input type="text" class="worksheet-text-input" @bind-value="catrow.Value.Label" />
                                                 </th>
                                                 <td class="col">
                                                     <input type="number" class="worksheet-text-input" @bind-value="catrow.Value.Amount" />
+                                                </td>
+                                                <td class="col-1">
+                                                    <button type="button" class="btn-close" aria-label="Close" @onclick="catrow.Value.Delete"></button>
                                                 </td>
                                             }
                                             else

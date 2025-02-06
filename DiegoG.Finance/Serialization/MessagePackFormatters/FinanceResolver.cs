@@ -18,8 +18,8 @@ public sealed class FinanceResolver : IFormatterResolver
         else if (typeof(T) == typeof(MoneyCollection))
             return (IMessagePackFormatter<T>)MoneyCollectionFormatter.Instance;
 
-        else if (typeof(T) == typeof(CategorizedMoneyCollection))
-            return (IMessagePackFormatter<T>)CategorizedMoneyCollectionFormatter.Instance;
+        else if (typeof(T) == typeof(ExpenseTypesCollection))
+            return (IMessagePackFormatter<T>)ExpenseTypesCollectionFormatter.Instance;
 
         else if (typeof(T) == typeof(LabeledAmount))
             return (IMessagePackFormatter<T>)LabeledAmountFormatter.Instance;

@@ -1,42 +1,32 @@
 ﻿namespace DiegoG.Finance.Blazor.ModelControls.SpendingTrackerSheet;
 
 public sealed record class ExpenseCategoryInfo(
-    SpendingTrackerSheetControls Controls,
-    MoneyCollection Money,
-    string Style,
-    int LongestTable,
-    string LightRowColor,
-    string DarkRowColor,
-    CategorizedMoneyCollection Collection,
-    int Id
+    ExpenseCategory ExpenseCategory,
+    CategorizedMoneyCollection Collection
 )
 {
-    public string Category
+    public void Delete()
     {
-        get => Money.Category ?? "?";
-        set => Collection.Rename(Money.Category!, value);
+        Collection.Remove(ExpenseCategory);
     }
 
-    public void AddExpense()
+    public string Label
     {
-        Money.Add($"Expense: #{Money.Count}", 0);
-        Controls.PreAnalyzeSheet();
+        get => ExpenseCategory.Label;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value) is false)
+                ExpenseCategory.TryRename(value);
+        }
     }
 
-    public readonly record struct ExpenseCategoryRow(LabeledAmountInfo? Value, string Style);
-    public IEnumerable<ExpenseCategoryRow> GetRows()
+    public string Amount
     {
-        int count = 0;
-        foreach (var mon in Money)
-            yield return new ExpenseCategoryRow(
-                new LabeledAmountInfo(mon, Money),
-                count++ % 2 == 0 ? LightRowColor : DarkRowColor
-            );
-
-        for (; count < LongestTable; count++)
-            yield return new(
-                null,
-                count % 2 == 0 ? LightRowColor : DarkRowColor
-            );
+        get => ExpenseCategory.Amount.ToString();
+        set
+        {
+            if (decimal.TryParse(value, out var dec))
+                ExpenseCategory.Amount = dec;
+        }
     }
 }

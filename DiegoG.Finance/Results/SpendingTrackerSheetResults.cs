@@ -43,8 +43,8 @@ public sealed class SpendingTrackerSheetResults : IReadOnlyDictionary<string, Sp
     internal SpendingTrackerCategoryResult Add(
         string key, 
         Percentage goal, 
-        MoneyCollection collection, 
-        CategorizedMoneyCollection categorizedMoneyCollection
+        CategorizedMoneyCollection collection, 
+        ExpenseTypesCollection categorizedMoneyCollection
     )
     {
         var result = new SpendingTrackerCategoryResult(goal, collection, categorizedMoneyCollection, Sheet);

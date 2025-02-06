@@ -99,17 +99,17 @@ public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
         }
     }
 
-    private static IEnumerable<ExpenseCategoryInfo> GetInnerExpenseCategories(IEnumerator<ExpenseCategoryInfo> enumerator)
+    private static IEnumerable<ExpenseTypeCollectionInfo> GetInnerExpenseCategories(IEnumerator<ExpenseTypeCollectionInfo> enumerator)
     {
         int i = 0;
         do
         {
             yield return enumerator.Current;
         }
-        while (i++ < 2 && enumerator.MoveNext()); // If i == 2, then MoveNext is not called and is safe to call outside. If MoveNext is false instead, it'll be called outside and terminated
+        while (i++ < 1 && enumerator.MoveNext()); // If i == 1, then MoveNext is not called and is safe to call outside. If MoveNext is false instead, it'll be called outside and terminated
     }
 
-    private IEnumerator<ExpenseCategoryInfo> GetExpenseCategoryEnumerator(CategorizedMoneyCollection collection)
+    private IEnumerator<ExpenseTypeCollectionInfo> GetExpenseCategoryEnumerator(ExpenseTypesCollection collection)
     {
         foreach (var cat in collection)
         {
@@ -126,14 +126,14 @@ public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
         }
     }
 
-    public IEnumerable<LabeledAmountInfo> EnumerateAmounts(MoneyCollection collection)
+    public IEnumerable<ExpenseCategoryInfo> EnumerateAmounts(CategorizedMoneyCollection collection)
     {
         Debug.Assert(WorkTable?.CurrentSheet?.SpendingTrackers is not null);
         foreach (var cat in collection)
-            yield return new LabeledAmountInfo(cat, collection);
+            yield return new ExpenseCategoryInfo(cat, collection);
     }
 
-    public IEnumerable<IEnumerable<ExpenseCategoryInfo>> EnumerateExpenseCategories()
+    public IEnumerable<IEnumerable<ExpenseTypeCollectionInfo>> EnumerateExpenseCategories()
     {
         Debug.Assert(WorkTable?.CurrentSheet?.SpendingTrackers is not null);
 

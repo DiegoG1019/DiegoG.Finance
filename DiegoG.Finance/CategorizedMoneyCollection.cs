@@ -1,126 +1,136 @@
-﻿using MessagePack;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json.Linq;
-using NodaMoney;
+﻿using Newtonsoft.Json.Linq;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
-using static DiegoG.Finance.MoneyCollection;
+using System.Diagnostics;
+using System.Security;
 
 namespace DiegoG.Finance;
 
-public class CategorizedMoneyCollection : CategorizedFinancialCollection<MoneyCollection>
+public class CategorizedMoneyCollection
+    : MoneyCollectionBase<CategorizedMoneyCollection, ExpenseCategory, Dictionary<string, ExpenseCategory>, KeyValuePair<string, ExpenseCategory>>,
+      IReadOnlyCollection<ExpenseCategory>
 {
-    private ReferredReference<MoneyCollectionTotalChangedEventHandler> Internal_Handler_MoneyTotalChanged;
+    internal ReferredReference<FinancialWorkEventHandler<ExpenseCategory, decimal>> Internal_Handler_AmountChanged;
+    internal ReferredReference<MoneyCollectionTotalChangedEventHandler<CategorizedMoneyCollection, ExpenseCategory, Dictionary<string, ExpenseCategory>, KeyValuePair<string, ExpenseCategory>>>? Internal_TotalChanged;
 
-    internal ReferredReference<FinancialCollectionChangedEventHandler<CategorizedMoneyCollection, KeyValuePair<string, MoneyCollection>>>? Internal_CollectionChanged;
-
-    internal ReferredReference<CategorizedMoneyCollectionInnerCollectionChangedEventHandler>? Internal_InnerCollectionChanged;
-
-    public delegate void CategorizedMoneyCollectionTotalChangedEventHandler(CategorizedMoneyCollection sender, MoneyCollection moneyCollection, decimal difference);
-
-    public delegate void CategorizedMoneyCollectionInnerCollectionChangedEventHandler(CategorizedMoneyCollection sender, MoneyCollection moneyCollection, NotifyCollectionChangedAction action);
-
-    internal CategorizedMoneyCollection(Dictionary<string, MoneyCollection> categories) : base(categories)
+    internal FinancialCategoryCollection? CategoryInfo
     {
-        Internal_Handler_MoneyTotalChanged = new(Val_TotalChanged);
-
-        RecalculateTotal();
-        foreach (var x in _categories.Values)
-            x.Internal_TotalChanged = Internal_Handler_MoneyTotalChanged;
-    }
-
-    public CategorizedMoneyCollection() : base()
-    {
-        Internal_Handler_MoneyTotalChanged = new(Val_TotalChanged);
-    }
-
-    public decimal Total { get; private set; }
-    
-    public void EnsureCapacity(int capacity)
-        => _categories.EnsureCapacity(capacity);
-
-    private void Val_TotalChanged(MoneyCollection collection, decimal difference)
-    {
-        Total += difference;
-        TotalChanged?.Invoke(this, collection, difference);
-    }
-
-    protected override MoneyCollection ValueFactory(string key)
-        => new()
+        get => field;
+        init
         {
-            Internal_TotalChanged = Internal_Handler_MoneyTotalChanged,
-            Category = key
+            ArgumentNullException.ThrowIfNull(value);
+            if (value.AddExpenseType(ExpenseType) is false)
+                throw new InvalidOperationException($"Could not add ExpenseType '{ExpenseType}', maybe it already exists?");
+
+            value.AddCategories(ExpenseType, _moneylist.Keys);
+            field = value;
+        }
+    }
+
+    internal readonly record struct ExpenseCategoryBuffer(string Label, decimal Amount);
+
+    internal CategorizedMoneyCollection(string expenseType, List<ExpenseCategoryBuffer>? amounts = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(expenseType);
+        ExpenseType = expenseType;
+
+        if (amounts is not null and { Count: > 0 }) 
+            for (int i = 0; i < amounts.Count; i++)
+            {
+                var item = amounts[i];
+                Debug.Assert(string.IsNullOrWhiteSpace(item.Label) is false);
+                _moneylist.Add(item.Label, new(item.Label, item.Amount, this));
+            }
+
+        Internal_Handler_AmountChanged = new(ExpenseCategoryChanged);
+    }
+
+    public ExpenseCategory Add(string label, decimal amount)
+    {
+        var item = new ExpenseCategory(label, amount, this)
+        {
+            Internal_AmountChanged = Internal_Handler_AmountChanged
         };
 
-    public override MoneyCollection Add(string key)
-    {
-        var coll = base.Add(key);
-        RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Add, new(key, coll));
-        return coll;
+        _moneylist.Add(label, new ExpenseCategory(label, amount, this));
+        CategoryInfo?.AddCategory(ExpenseType, label);
+        Total += item.Amount;
+        RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Add, item);
+        return item;
     }
 
     public override void Clear()
     {
+        CategoryInfo?.RemoveExpenseType(ExpenseType);
         base.Clear();
-        Internal_Handler_MoneyTotalChanged = new(Val_TotalChanged);
-        RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Reset, default);
     }
 
-    public bool Rename(string key, string newName)
+    public override bool Remove(ExpenseCategory item)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        ArgumentException.ThrowIfNullOrWhiteSpace(newName);
+        CategoryInfo?.RemoveCategory(ExpenseType, item.Label);
+        return base.Remove(item);
+    }
 
-        if (_categories.Comparer.Equals(key, newName))
-            return true;
+    public bool RenameCategory(string label, string newLabel)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(label);
+        ArgumentException.ThrowIfNullOrWhiteSpace(newLabel);
 
-        if (_categories.Remove(key, out var collection))
+        if (_moneylist.TryGetValue(label, out var item) && _moneylist.TryAdd(newLabel, item))
         {
-            _categories.Add(key, collection);
-            collection.Category = newName;
-            RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Move, new(key, collection));
+            CategoryInfo?.RemoveCategory(ExpenseType, label);
+            CategoryInfo?.AddCategory(ExpenseType, newLabel);
+            _moneylist.Remove(label);
+            item.Label = newLabel;
             return true;
         }
 
         return false;
     }
 
-    public override bool Remove(string key, [MaybeNullWhen(false)] out MoneyCollection value)
+    public string ExpenseType { get; private set; }
+
+    public bool TryRenameExpenseType(string newName)
     {
-        if (base.Remove(key, out value)) 
+        if (CategoryInfo?.RenameExpenseType(ExpenseType, newName) is false)
         {
-            Val_TotalChanged(value, -value.Total);
-            value.Internal_TotalChanged = null;
-            value.Category = null;
-            RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Remove, new(key, value));
+            ExpenseType = newName;
             return true;
         }
 
-        value = null;
         return false;
     }
 
-    public void RecalculateTotal()
+    internal void ClearFromRecord()
     {
-        decimal total = 0;
-        foreach (var x in _categories)
-        {
-            total += x.Value.Total;
-            x.Value.Category = x.Key;
-        }
-        Total = total;
+        CategoryInfo?.RemoveExpenseType(ExpenseType);
+        ExpenseType = null!;
     }
 
-    private void RaiseCollectionChangedEvent(NotifyCollectionChangedAction action, KeyValuePair<string, MoneyCollection> item)
+    IEnumerator IEnumerable.GetEnumerator() => _moneylist.GetEnumerator();
+
+    private void ExpenseCategoryChanged(ExpenseCategory amount, decimal old, decimal @new)
     {
-        Internal_CollectionChanged?.Value?.Invoke(this, action, item);
-        CollectionChanged?.Invoke(this, action, item);
+        var diff = @new - old;
+        Total += diff;
+        RaiseTotalChangedEvent(diff);
+        RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Replace, amount, false);
     }
 
-    public event CategorizedMoneyCollectionTotalChangedEventHandler? TotalChanged;
-    public event FinancialCollectionChangedEventHandler<CategorizedMoneyCollection, KeyValuePair<string, MoneyCollection>>? CollectionChanged;
+    protected override void RaiseTotalChangedEvent(decimal diff)
+    {
+        Internal_TotalChanged?.Value?.Invoke(this, diff);
+        base.RaiseTotalChangedEvent(diff);
+    }
+
+    protected override Dictionary<string, ExpenseCategory> InnerCollectionFactory(IEnumerable<ExpenseCategory>? amounts)
+        => amounts is null
+            ? []
+            : new Dictionary<string, ExpenseCategory>(amounts.Select(x => new KeyValuePair<string, ExpenseCategory>(x.Label, x)));
+
+    protected override ExpenseCategory GetEntry(KeyValuePair<string, ExpenseCategory> entry)
+        => entry.Value;
+
+    protected override KeyValuePair<string, ExpenseCategory> GetInnerEntry(ExpenseCategory entry)
+        => new(entry.Label, entry);
 }

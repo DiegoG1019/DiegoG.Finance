@@ -7,8 +7,8 @@ public class SpendingTrackerCategoryResult
 {
     internal SpendingTrackerCategoryResult(
         Percentage goal,
-        MoneyCollection collection,
-        CategorizedMoneyCollection categorizedMoneyCollection,
+        CategorizedMoneyCollection collection,
+        ExpenseTypesCollection categorizedMoneyCollection,
         SpendingTrackerSheet sheet
     ) 
     {
@@ -18,8 +18,8 @@ public class SpendingTrackerCategoryResult
         Goal = goal;
     }
 
-    public CategorizedMoneyCollection CategorizedMoneyCollection { get; }
-    public MoneyCollection Collection { get; }
+    public ExpenseTypesCollection CategorizedMoneyCollection { get; }
+    public CategorizedMoneyCollection Collection { get; }
     public SpendingTrackerSheet Sheet { get; }
     public Percentage Goal
     {

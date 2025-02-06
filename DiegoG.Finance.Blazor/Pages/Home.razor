@@ -8,13 +8,27 @@
 <h1>@Context.CurrentLanguage.SiteTitle</h1>
 <h2>@Context.CurrentLanguage.SelectWorkSheet</h2>
 
-<!--
-<InputSelect TValue="string" id="language-selector" class="form-select">
-    @foreach (var header in Headers)
-    {
-        <option value="@header.Path">@header.Name</option>
-    }
-</InputSelect>
--->
-
-<button onclick="@GoToWorkPage"></button>
+<div class="sheet-table">
+    <div>
+        @foreach (var sheet in Headers)
+        {
+            <table class="sheet-block">
+                <tr class="sheet-name-row">
+                    <th>Name</th>
+                    <td>@sheet.Name</td>
+                </tr>
+                <tr class="sheet-created-row">
+                    <th>Created on:</th>
+                    <td>@sheet.Created</td>
+                </tr>
+                <tr class="sheet-info-row">
+                    <th>@sheet.Path</th>
+                    <td>V.@sheet.Version</td>
+                </tr>
+            </table>
+        }
+    </div>
+    <div>
+        <button @onclick="GoToWorkPage">New WorkSheet</button>
+    </div>
+</div>

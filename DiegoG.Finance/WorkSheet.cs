@@ -9,6 +9,12 @@ using System.Threading.Tasks;
 
 namespace DiegoG.Finance;
 
+public class MoneyFlowTracker
+{
+    // TODO Add functionality to stream data from a source; so that we can page the flow instead of loading it all at once. Next file version?
+    
+}
+
 public class WorkSheet
 {
     public delegate void WorkSheetPropertyChangedEventHandler(WorkSheet sender, string property);
@@ -17,6 +23,7 @@ public class WorkSheet
     {
         Version = version;
         SpendingTrackers = spendingTrackers is not null ? spendingTrackers : new SpendingTrackerSheet();
+        Categories = new CategorizedMoneyCollectionCategoriesSetWrapper(SpendingTrackers.ExpenseCategories);
     }
 
     public WorkSheet(Currency? currency = null) : this(1, null)
@@ -27,6 +34,8 @@ public class WorkSheet
     public int Version { get; }
 
     public DateTimeOffset Created { get; init; } = DateTimeOffset.Now;
+
+    public ICollection<string> Categories { get; }
 
     [field: AllowNull]
     public string Title

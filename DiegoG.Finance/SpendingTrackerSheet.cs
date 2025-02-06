@@ -12,8 +12,8 @@ namespace DiegoG.Finance;
 public class SpendingTrackerSheet
 {
     internal SpendingTrackerSheet(
-        MoneyCollection? incomeSources,
-        CategorizedMoneyCollection? expenseCategories
+        CategorizedMoneyCollection? incomeSources,
+        ExpenseTypesCollection? expenseCategories
     )
     {
         IncomeSources = incomeSources is null ? [] : incomeSources;
@@ -26,9 +26,9 @@ public class SpendingTrackerSheet
     public SpendingTrackerSheet() : this(null, null) { }
 
     private void ExpenseCategories_CollectionChanged(
-        CategorizedMoneyCollection arg1, 
+        ExpenseTypesCollection arg1, 
         NotifyCollectionChangedAction arg2, 
-        KeyValuePair<string, MoneyCollection> arg3
+        KeyValuePair<string, CategorizedMoneyCollection> arg3
     )
     {
         if (arg2 is NotifyCollectionChangedAction.Add)
@@ -47,8 +47,8 @@ public class SpendingTrackerSheet
         }
     }
 
-    public MoneyCollection IncomeSources { get; } 
-    public CategorizedMoneyCollection ExpenseCategories { get; }
+    public CategorizedMoneyCollection IncomeSources { get; } 
+    public ExpenseTypesCollection ExpenseCategories { get; }
 
     [JsonIgnore]
     public SpendingTrackerSheetResults Results { get; }

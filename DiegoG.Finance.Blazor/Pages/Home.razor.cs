@@ -32,9 +32,11 @@ public partial class Home
     }
 
     private Task GoToWorkPage()
+        => GoToWorkPage(null);
+
+    private async Task GoToWorkPage(WorkSheetHeader? header)
     {
-        //WorkTable.CurrentSheet = new();
+        WorkTable.CurrentSheet = header is WorkSheetHeader h ? await storage.LoadWorkSheet(h) : WorkTable.NewDefaultWorkSheet();
         nav.NavigateTo("/work");
-        return Task.CompletedTask;
     }
 }

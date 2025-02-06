@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DiegoG.Finance;
 
-public sealed class LabeledAmount(string label, decimal amount)
+public sealed class LabeledAmount(string label, decimal amount) : IFinancialEntry
 {
     public string Label
     {
@@ -28,9 +28,6 @@ public sealed class LabeledAmount(string label, decimal amount)
             AmountChanged?.Invoke(this, old, value);
         }
     } = amount;
-
-    public static implicit operator KeyValuePair<string, decimal>(LabeledAmount label)
-        => new(label.Label, label.Amount);
 
     internal ReferredReference<FinancialWorkEventHandler<LabeledAmount, decimal>>? Internal_AmountChanged;
     public event FinancialWorkEventHandler<LabeledAmount, decimal>? AmountChanged;

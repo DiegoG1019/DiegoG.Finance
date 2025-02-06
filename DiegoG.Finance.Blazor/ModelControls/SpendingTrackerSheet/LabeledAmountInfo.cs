@@ -1,5 +1,4 @@
 ﻿namespace DiegoG.Finance.Blazor.ModelControls.SpendingTrackerSheet;
-
 public sealed record class LabeledAmountInfo(
     LabeledAmount LabeledAmount,
     MoneyCollection Collection

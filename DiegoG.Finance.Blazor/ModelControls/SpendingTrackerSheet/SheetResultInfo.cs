@@ -10,12 +10,12 @@ public sealed record class SheetResultInfo(
 )
 {
     public void DeleteCategory()
-        => Result.CategorizedMoneyCollection.Remove(Result.Collection.Category!, out _);
+        => Result.CategorizedMoneyCollection.Remove(Result.Collection.ExpenseType!, out _);
 
     public string Category
     {
-        get => Result.Collection.Category!;
-        set => Result.CategorizedMoneyCollection.Rename(Result.Collection.Category!, value);
+        get => Result.Collection.ExpenseType!;
+        set => Result.CategorizedMoneyCollection.Rename(Result.Collection.ExpenseType!, value);
     }
 
     public string Goal
