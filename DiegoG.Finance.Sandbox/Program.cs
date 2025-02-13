@@ -9,7 +9,7 @@ internal class Program
     static void Main(string[] args)
     {
         var work = new WorkSheet(Currency.FromCode("COP"));
-        var sheet = work.SpendingTrackers;
+        var sheet = work.SpendingTracker;
 
         sheet.IncomeSources.Add("Day Job", 5000000);
         sheet.IncomeSources.Add("Freelancing", 1500000);

@@ -17,12 +17,12 @@ public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
 
     public void AddCategory()
     {
-        WorkTable.CurrentSheet?.SpendingTrackers.ExpenseCategories.Add($"New Sheet [{Random.Shared.Next(0, 9999)}]");
+        WorkTable.CurrentSheet?.SpendingTracker.ExpenseCategories.Add($"New Sheet [{Random.Shared.Next(0, 9999)}]");
     }
 
     public void AddIncomeSource()
     {
-        var sources = WorkTable.CurrentSheet?.SpendingTrackers.IncomeSources;
+        var sources = WorkTable.CurrentSheet?.SpendingTracker.IncomeSources;
         sources?.Add($"Source #{sources.Count + 1}", 0);
     }
 
@@ -78,17 +78,17 @@ public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
 
     public void PreAnalyzeSheet()
     {
-        Debug.Assert(WorkTable?.CurrentSheet?.SpendingTrackers is not null);
+        Debug.Assert(WorkTable?.CurrentSheet?.SpendingTracker is not null);
 
-        foreach (var cat in WorkTable.CurrentSheet.SpendingTrackers.ExpenseCategories)
+        foreach (var cat in WorkTable.CurrentSheet.SpendingTracker.ExpenseCategories)
             LongestTable = int.Max(cat.Value.Count, LongestTable);
     }
 
     public IEnumerable<SheetResultInfo> EnumerateSheetResults()
     {
-        Debug.Assert(WorkTable?.CurrentSheet?.SpendingTrackers is not null);
+        Debug.Assert(WorkTable?.CurrentSheet?.SpendingTracker is not null);
 
-        foreach (var cat in WorkTable.CurrentSheet.SpendingTrackers.Results)
+        foreach (var cat in WorkTable.CurrentSheet.SpendingTracker.Results)
         {
             yield return new SheetResultInfo(
                 cat.Value,
@@ -128,16 +128,16 @@ public sealed record class SpendingTrackerSheetControls(WorkTable WorkTable)
 
     public IEnumerable<ExpenseCategoryInfo> EnumerateAmounts(CategorizedMoneyCollection collection)
     {
-        Debug.Assert(WorkTable?.CurrentSheet?.SpendingTrackers is not null);
+        Debug.Assert(WorkTable?.CurrentSheet?.SpendingTracker is not null);
         foreach (var cat in collection)
             yield return new ExpenseCategoryInfo(cat, collection);
     }
 
     public IEnumerable<IEnumerable<ExpenseTypeCollectionInfo>> EnumerateExpenseCategories()
     {
-        Debug.Assert(WorkTable?.CurrentSheet?.SpendingTrackers is not null);
+        Debug.Assert(WorkTable?.CurrentSheet?.SpendingTracker is not null);
 
-        var enumerator = GetExpenseCategoryEnumerator(WorkTable.CurrentSheet.SpendingTrackers.ExpenseCategories);
+        var enumerator = GetExpenseCategoryEnumerator(WorkTable.CurrentSheet.SpendingTracker.ExpenseCategories);
         while (enumerator.MoveNext())
             yield return GetInnerExpenseCategories(enumerator);
     }

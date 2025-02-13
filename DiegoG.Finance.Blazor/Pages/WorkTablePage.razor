@@ -24,7 +24,7 @@
     <div class="container">
         <div class="row worktable worktable-header">
             <table class="col">
-                @foreach (var item in WorkTable.SpendingTrackerSheetControls.EnumerateAmounts(WorkTable.CurrentSheet.SpendingTrackers.IncomeSources))
+                @foreach (var item in WorkTable.SpendingTrackerSheetControls.EnumerateAmounts(WorkTable.CurrentSheet.SpendingTracker.IncomeSources))
                 {
                     item.ExpenseCategory.LabelChanged += FinancialWorkEventHandler;
                     item.ExpenseCategory.AmountChanged += FinancialWorkEventHandler;
@@ -42,7 +42,7 @@
                 }
                 <tr class="total">
                     <th>Total</th>
-                    <td>@WorkTable.CurrentSheet.SpendingTrackers.IncomeSources.Total</td>
+                    <td>@WorkTable.CurrentSheet.SpendingTracker.IncomeSources.Total</td>
                     <td>
                         <button type="button" class="btn btn-outline-primary" aria-label="New" @onclick="WorkTable.SpendingTrackerSheetControls.AddIncomeSource">+</button>
                     </td>
@@ -149,10 +149,10 @@
                                     Remaining
                                 </td>
                                 <td class="col">
-                                    @WorkTable.CurrentSheet.SpendingTrackers.Results.RemainingPercentage
+                                    @WorkTable.CurrentSheet.SpendingTracker.Results.RemainingPercentage
                                 </td>
                                 <td class="col">
-                                    @WorkTable.CurrentSheet.SpendingTrackers.Results.Remaining
+                                    @WorkTable.CurrentSheet.SpendingTracker.Results.Remaining
                                 </td>
                                 <td class="col-1">
                                     <button type="button" class="btn btn-outline-primary" aria-label="New" @onclick="WorkTable.SpendingTrackerSheetControls.AddCategory">+</button>

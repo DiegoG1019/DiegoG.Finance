@@ -1,41 +1,65 @@
 ﻿using NodaMoney;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace DiegoG.Finance;
 
-public class MoneyFlowTracker
-{
-    // TODO Add functionality to stream data from a source; so that we can page the flow instead of loading it all at once. Next file version?
-    
-}
-
-public class WorkSheet
+public sealed class WorkSheet
 {
     public delegate void WorkSheetPropertyChangedEventHandler(WorkSheet sender, string property);
 
-    internal WorkSheet(int version, SpendingTrackerSheet? spendingTrackers)
+    internal WorkSheet(int version)
     {
         Version = version;
-        SpendingTrackers = spendingTrackers is not null ? spendingTrackers : new SpendingTrackerSheet();
-        Categories = new CategorizedMoneyCollectionCategoriesSetWrapper(SpendingTrackers.ExpenseCategories);
     }
 
-    public WorkSheet(Currency? currency = null) : this(1, null)
+    public WorkSheet() : this(1)
     {
-        Currency = currency ?? Currency.CurrentCurrency;
+        ExpenseTypesAndCategories = new(this, null);
+        Book = new(this, null);
+    }
+
+    public WorkSheet(
+        Currency currency,
+        IEnumerable<ExpenseType.Info>? typesAndCategories = null,
+        WorkSheetBook.Info? book = null
+    ) : this(1)
+    {
+        ExpenseTypesAndCategories = new(this, typesAndCategories);
+        Book = new(this, book);
+    }
+
+
+    [field: AllowNull]
+    public ExpenseTypesCollection ExpenseTypesAndCategories
+    {
+        get
+        {
+            Debug.Assert(field is not null);
+            return field;
+        }
+    }
+
+    [field: AllowNull]
+    public WorkSheetBook Book
+    {
+        get
+        {
+            Debug.Assert(field is not null);
+            return field;
+        }
     }
 
     public int Version { get; }
 
     public DateTimeOffset Created { get; init; } = DateTimeOffset.Now;
-
-    public ICollection<string> Categories { get; }
 
     [field: AllowNull]
     public string Title
@@ -47,8 +71,6 @@ public class WorkSheet
             WorkSheetPropertyChanged?.Invoke(this, nameof(Title));
         }
     }
-
-    public SpendingTrackerSheet SpendingTrackers { get; }
 
     public Currency Currency
     {

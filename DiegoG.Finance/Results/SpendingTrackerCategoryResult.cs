@@ -1,43 +1,21 @@
-﻿using Newtonsoft.Json.Linq;
-using NodaMoney;
+﻿using DiegoG.Finance.Internal;
+using System.Diagnostics;
 
 namespace DiegoG.Finance.Results;
 
-public class SpendingTrackerCategoryResult
+public sealed class SpendingTrackerTypeResult : FinancialEntity<SpendingTrackerSheet, SpendingTrackerTypeResult>
 {
-    internal SpendingTrackerCategoryResult(
-        Percentage goal,
-        CategorizedMoneyCollection collection,
-        ExpenseTypesCollection categorizedMoneyCollection,
-        SpendingTrackerSheet sheet
-    ) 
+    internal SpendingTrackerTypeResult(SpendingTrackerSheet parent, ExpenseType category) : base(parent)
     {
-        CategorizedMoneyCollection = categorizedMoneyCollection ?? throw new ArgumentNullException(nameof(collection));
-        Collection = collection ?? throw new ArgumentNullException(nameof(collection));
-        Sheet = sheet ?? throw new ArgumentNullException(nameof(sheet));
-        Goal = goal;
+        Debug.Assert(category is not null);
+        ExpenseType = category;
     }
 
-    public ExpenseTypesCollection CategorizedMoneyCollection { get; }
-    public CategorizedMoneyCollection Collection { get; }
-    public SpendingTrackerSheet Sheet { get; }
-    public Percentage Goal
-    {
-        get => field;
-        set
-        {
-            if (field != value)
-            {
-                var old = field;
-                field = value;
-                GoalChanged?.Invoke(this, old, value);
-            }
-        }
-    }
+    public Percentage Goal { get; set; }
 
-    public Percentage ActualPercentage => Percentage.FromRatio(Collection.Total, Sheet.IncomeSources.Total);
+    public Percentage Actual => Percentage.FromRatio(Total, Parent.IncomeSources.Total);
 
-    public decimal Total => Collection.Total;
+    public decimal Total { get; internal set; }
 
-    public event FinancialWorkEventHandler<SpendingTrackerCategoryResult, Percentage>? GoalChanged;
+    public ExpenseType ExpenseType { get; }
 }

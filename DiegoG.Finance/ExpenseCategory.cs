@@ -1,48 +1,41 @@
-﻿using System.Diagnostics;
+﻿using DiegoG.Finance.Internal;
+using MessagePack;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace DiegoG.Finance;
 
-public sealed class ExpenseCategory : IFinancialEntry
+public sealed class ExpenseCategory : CategoryBase<ExpenseType, ExpenseCategory>
 {
-    internal ExpenseCategory(string label, decimal amount, CategorizedMoneyCollection moneyCollection)
+    [MessagePackObject]
+    public readonly record struct Info([property: Key(0)] string Name);
+
+    public string Name { get; private set; }
+
+    internal ExpenseCategory(ExpenseType parent, string name) : base(parent)
     {
-        Debug.Assert(string.IsNullOrWhiteSpace(label) is false);
-        Debug.Assert(moneyCollection is not null);
-
-        Label = label;
-        Amount = amount;
-        Collection = moneyCollection;
+        Debug.Assert(string.IsNullOrWhiteSpace(name) is false);
+        Name = name;
     }
 
-    public CategorizedMoneyCollection Collection { get; }
-
-    public string Label 
-    { 
-        get; 
-        internal set
-        {
-            var old = field;
-            field = value;
-            LabelChanged?.Invoke(this, old, value);
-        }
-    }
-
-    public decimal Amount
+    public bool TryRename(string newName)
     {
-        get => field;
-        set
+        ArgumentException.ThrowIfNullOrWhiteSpace(newName);
+        if (Parent is not ExpenseType parent)
+            return false;
+
+        var old = Name;
+
+        if (parent._categories.TryAdd(newName, this))
         {
-            var old = field;
-            field = value;
-            Internal_AmountChanged?.Value?.Invoke(this, old, value);
-            AmountChanged?.Invoke(this, old, value);
+            Name = newName;
+            parent._categories.Remove(old);
+            NameChanged?.Invoke(this, old, newName);
+            return true;
         }
+
+        return false;
     }
 
-    public bool TryRename(string newLabel)
-        => Collection.RenameCategory(Label, newLabel);
-
-    internal ReferredReference<FinancialWorkEventHandler<ExpenseCategory, decimal>>? Internal_AmountChanged;
-    public event FinancialWorkEventHandler<ExpenseCategory, decimal>? AmountChanged;
-    public event FinancialWorkEventHandler<ExpenseCategory, string>? LabelChanged;
+    public event FinancialWorkValueChangedHandler<ExpenseCategory, string>? NameChanged;
 }

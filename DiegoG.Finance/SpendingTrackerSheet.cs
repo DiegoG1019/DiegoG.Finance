@@ -1,55 +1,37 @@
-﻿using DiegoG.Finance.Results;
-using NodaMoney;
-using System.Collections.Specialized;
-using System.Diagnostics;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
+﻿using DiegoG.Finance.Internal;
+using DiegoG.Finance.Results;
+using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
-using static DiegoG.Finance.WorkSheet;
 
 namespace DiegoG.Finance;
 
-public class SpendingTrackerSheet
+public class SpendingTrackerSheet : FinancialEntity<WorkSheetPage, SpendingTrackerSheet>
 {
+    public readonly record struct Info();
+
     internal SpendingTrackerSheet(
-        CategorizedMoneyCollection? incomeSources,
-        ExpenseTypesCollection? expenseCategories
-    )
+        WorkSheetPage page,
+        IEnumerable<SpendingTrackerEntry.Info>? incomeEntries, 
+        IEnumerable<SpendingTrackerEntry.Info>? expenseEntries
+    ) : base(page)
     {
-        IncomeSources = incomeSources is null ? [] : incomeSources;
-        ExpenseCategories = expenseCategories is null ? ([]) : expenseCategories;
-
-        Results = new(this);
-        ExpenseCategories.Internal_CollectionChanged = new(ExpenseCategories_CollectionChanged);
+        IncomeSources = new SpendingTrackerIncomeCollection(this, incomeEntries);
+        Expenses = new SpendingTrackerCollection(this, expenseEntries);
     }
 
-    public SpendingTrackerSheet() : this(null, null) { }
+    public SpendingTrackerIncomeCollection IncomeSources { get; } 
+    public SpendingTrackerCollection Expenses { get; }
 
-    private void ExpenseCategories_CollectionChanged(
-        ExpenseTypesCollection arg1, 
-        NotifyCollectionChangedAction arg2, 
-        KeyValuePair<string, CategorizedMoneyCollection> arg3
-    )
+    public SpendingTrackerCategoryResult GetExpensesResults(ExpenseCategory category)
     {
-        if (arg2 is NotifyCollectionChangedAction.Add)
-        {
-            Results.Add(arg3.Key, default, arg3.Value, arg1);
-        }    
-        else if (arg2 is NotifyCollectionChangedAction.Remove)
-        {
-            Results.Remove(arg3.Key);
-        }
-        else if (arg2 is NotifyCollectionChangedAction.Reset)
-        {
-            Results.Clear();
-            foreach (var item in arg1)
-                Results.Add(item.Key, new Percentage(0), item.Value, arg1);
-        }
+        ArgumentNullException.ThrowIfNull(category);
+        category.ThrowIfNotSameSheet(Sheet);
+        return category.GetOrAddTracker<SpendingTrackerCategoryResult>(cat => new(this, cat));
     }
-
-    public CategorizedMoneyCollection IncomeSources { get; } 
-    public ExpenseTypesCollection ExpenseCategories { get; }
 
     [JsonIgnore]
-    public SpendingTrackerSheetResults Results { get; }
+    public Percentage RemainingPercentage => Percentage.FromRatio(Remaining, IncomeSources.Total);
+
+    [JsonIgnore]
+    public decimal Remaining => IncomeSources.Total - Expenses.Total;
 }

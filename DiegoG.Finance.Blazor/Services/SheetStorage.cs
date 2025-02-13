@@ -1,5 +1,5 @@
 ﻿using Blazored.LocalStorage;
-using DiegoG.Finance.Serialization.MessagePackFormatters;
+using DiegoG.Finance.Serialization;
 using MessagePack;
 using System.Buffers;
 using System.Buffers.Text;

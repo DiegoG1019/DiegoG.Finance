@@ -1,123 +1,84 @@
-﻿using MessagePack;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json.Linq;
-using NodaMoney;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
+using System.Collections;
+using DiegoG.Finance.Internal;
 
 namespace DiegoG.Finance;
 
-public class ExpenseTypesCollection : CategorizedFinancialCollection<CategorizedMoneyCollection>
+public sealed class ExpenseTypesCollection : FinancialWork<ExpenseTypesCollection>, IReadOnlyCollection<ExpenseType>
 {
-    private ReferredReference<MoneyCollectionTotalChangedEventHandler<CategorizedMoneyCollection, ExpenseCategory, Dictionary<string, ExpenseCategory>, KeyValuePair<string, ExpenseCategory>>> Internal_Handler_MoneyTotalChanged;
+    internal readonly Dictionary<string, ExpenseType> _types;
 
-    internal ReferredReference<FinancialCollectionChangedEventHandler<ExpenseTypesCollection, KeyValuePair<string, CategorizedMoneyCollection>>>? Internal_CollectionChanged;
+    internal ExpenseType.Info InfoSelector(ExpenseType type)
+        => new(type.Name, type == Income, type.Select(x => new ExpenseCategory.Info(x.Name)));
 
-    internal ReferredReference<CategorizedMoneyCollectionInnerCollectionChangedEventHandler>? Internal_InnerCollectionChanged;
+    internal IEnumerable<ExpenseType.Info> GetInfo()
+        => this.Select(InfoSelector);
 
-    public delegate void CategorizedMoneyCollectionTotalChangedEventHandler(ExpenseTypesCollection sender, CategorizedMoneyCollection moneyCollection, decimal difference);
-
-    public delegate void CategorizedMoneyCollectionInnerCollectionChangedEventHandler(ExpenseTypesCollection sender, CategorizedMoneyCollection moneyCollection, NotifyCollectionChangedAction action);
-
-    internal ExpenseTypesCollection(Dictionary<string, CategorizedMoneyCollection> categories) : base(categories)
+    internal ExpenseTypesCollection(WorkSheet sheet, IEnumerable<ExpenseType.Info>? types) : base(sheet)
     {
-        Internal_Handler_MoneyTotalChanged = new(Val_TotalChanged);
-
-        RecalculateTotal();
-        foreach (var x in _categories.Values)
-            x.Internal_TotalChanged = Internal_Handler_MoneyTotalChanged;
-    }
-
-    public ExpenseTypesCollection() : base()
-    {
-        Internal_Handler_MoneyTotalChanged = new(Val_TotalChanged);
-    }
-
-    internal FinancialCategoryCollection? CategoryInfo { get; init; }
-
-    public decimal Total { get; private set; }
-    
-    public void EnsureCapacity(int capacity)
-        => _categories.EnsureCapacity(capacity);
-
-    private void Val_TotalChanged(CategorizedMoneyCollection collection, decimal difference)
-    {
-        Total += difference;
-        TotalChanged?.Invoke(this, collection, difference);
-    }
-
-    protected override CategorizedMoneyCollection ValueFactory(string key)
-        => new(key)
+        var dict = new Dictionary<string, ExpenseType>();
+        if (types is not null)
         {
-            Internal_TotalChanged = Internal_Handler_MoneyTotalChanged,
-            CategoryInfo = CategoryInfo
-        };
+            foreach (var info in types)
+            {
+                if (string.IsNullOrWhiteSpace(info.Name))
+                    throw new ArgumentException("One or more ExpenseTypes have a name that is null or only whitespace", nameof(types));
 
-    public override CategorizedMoneyCollection Add(string key)
-    {
-        var coll = base.Add(key);
-        RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Add, new(key, coll));
-        return coll;
-    }
-
-    public override void Clear()
-    {
-        base.Clear();
-        Internal_Handler_MoneyTotalChanged = new(Val_TotalChanged);
-        RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Reset, default);
-    }
-
-    public bool Rename(string key, string newName)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        ArgumentException.ThrowIfNullOrWhiteSpace(newName);
-
-        if (_categories.Comparer.Equals(key, newName))
-            return true;
-
-        if (_categories.TryGetValue(key, out var collection) && collection.TryRenameExpenseType(newName))
+                var et = new ExpenseType(this, info.Name, info.Categories);
+                if (dict.TryAdd(info.Name, et) is false)
+                    throw new ArgumentException($"More than one ExpenseType named '{info.Name}' exists", nameof(types));
+                if (info.IsIncome)
+                {
+                    if (Income is not null)
+                        throw new ArgumentException($"More than one ExpenseType is marked as income type", nameof(types));
+                    Income = et;
+                }
+            }
+        }
+        
+        if (Income is null)
         {
-            _categories.Add(newName, collection);
-            _categories.Remove(key);
-            RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Move, new(key, collection));
-            return true;
+            if (dict.TryGetValue("Income", out var income))
+                Income = income;
+            else
+            {
+                Income = new(this, "Income", null!);
+                dict.Add(Income.Name, Income);
+            }
         }
 
-        return false;
+        _types = dict;
     }
 
-    public override bool Remove(string key, [MaybeNullWhen(false)] out CategorizedMoneyCollection value)
+    public ExpenseType Income { get; }
+
+    public bool Add(string name, [NotNullWhen(true)] out ExpenseType? type)
     {
-        if (base.Remove(key, out value)) 
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        if (_types.ContainsKey(name))
         {
-            value.ClearFromRecord();
-            Val_TotalChanged(value, -value.Total);
-            value.Internal_TotalChanged = null;
-            RaiseCollectionChangedEvent(NotifyCollectionChangedAction.Remove, new(key, value));
-            return true;
+            type = null;
+            return false;
         }
 
-        value = null;
-        return false;
+        type = new(this, name, null);
+        _types.Add(name, type);
+        return true;
     }
 
-    public void RecalculateTotal()
-    {
-        decimal total = 0;
-        foreach (var x in _categories)
-            total += x.Value.Total;
-        Total = total;
-    }
+    public bool TryGetValue(string name, [NotNullWhen(true)] out ExpenseType? type)
+        => _types.TryGetValue(name, out type);
 
-    private void RaiseCollectionChangedEvent(NotifyCollectionChangedAction action, KeyValuePair<string, CategorizedMoneyCollection> item)
-    {
-        Internal_CollectionChanged?.Value?.Invoke(this, action, item);
-        CollectionChanged?.Invoke(this, action, item);
-    }
+    public bool Remove(string name)
+        => _types.Remove(name);
 
-    public event CategorizedMoneyCollectionTotalChangedEventHandler? TotalChanged;
-    public event FinancialCollectionChangedEventHandler<ExpenseTypesCollection, KeyValuePair<string, CategorizedMoneyCollection>>? CollectionChanged;
+    public int Count => _types.Count;
+
+    public IEnumerator<ExpenseType> GetEnumerator()
+        => _types.Values.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+        => _types.Values.GetEnumerator();
 }
