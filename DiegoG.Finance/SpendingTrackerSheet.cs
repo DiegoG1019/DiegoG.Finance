@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace DiegoG.Finance;
 
-public class SpendingTrackerSheet : FinancialEntity<WorkSheetPage, SpendingTrackerSheet>
+public class SpendingTrackerSheet : PagedEntity<WorkSheetPage, SpendingTrackerSheet>
 {
     public readonly record struct Info();
 

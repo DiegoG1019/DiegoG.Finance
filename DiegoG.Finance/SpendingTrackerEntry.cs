@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 
 namespace DiegoG.Finance;
 
-public sealed class SpendingTrackerEntry : FinancialEntity<SpendingTrackerSheet, SpendingTrackerEntry>, IFinanciallyAnnotated
+public sealed class SpendingTrackerEntry : PagedEntity<SpendingTrackerSheet, SpendingTrackerEntry>, IFinanciallyAnnotated
 {
     [MessagePackObject]
     public readonly record struct Info(
@@ -16,7 +16,7 @@ public sealed class SpendingTrackerEntry : FinancialEntity<SpendingTrackerSheet,
         [property: Key(0)] decimal Amount
     );
 
-    internal SpendingTrackerTypeResult TrackerFactory(ExpenseType type)
+    internal SpendingTrackerTypeResult TrackerFactory(Type _, ExpenseType type)
     {
         Debug.Assert(Category.Parent == type);
         return new(Parent, type);
@@ -28,6 +28,7 @@ public sealed class SpendingTrackerEntry : FinancialEntity<SpendingTrackerSheet,
         category.ThrowIfNotSameSheet(Sheet);
         Category = category;
         Amount = amount;
+        Page.GetOrAddTypeTracker<SpendingTrackerTypeResult>(Category.Parent, TrackerFactory).Total += amount;
     }
 
     internal SpendingTrackerEntry(SpendingTrackerSheet parent, Info info) : base(parent)
@@ -43,15 +44,15 @@ public sealed class SpendingTrackerEntry : FinancialEntity<SpendingTrackerSheet,
 
         Category = category;
         Amount = info.Amount;
+        Page.GetOrAddTypeTracker<SpendingTrackerTypeResult>(Category.Parent, TrackerFactory).Total += info.Amount;
     }
 
     public ExpenseCategory Category { get; }
 
     protected override void OnInvalidate()
     {
-        Category.DetachEntity(this);
-        var tracker = Category.Parent.GetOrAddTracker(TrackerFactory);
-        if (tracker is not null)
+        Page.DetachEntity(Category, this);
+        if (Page.TryGetTypeTracker<SpendingTrackerTypeResult>(Category.Parent, out var tracker))
             tracker.Total -= Amount;
     }
 
@@ -61,7 +62,7 @@ public sealed class SpendingTrackerEntry : FinancialEntity<SpendingTrackerSheet,
         set
         {
             var diff = value - field;
-            var tracker = Category.Parent.GetOrAddTracker(TrackerFactory);
+            var tracker = Page.GetOrAddTypeTracker<SpendingTrackerTypeResult>(Category.Parent, TrackerFactory);
             tracker.Total += diff;
             ChangeValue(ref field, value, Internal_AmountChanged, AmountChanged);
         }

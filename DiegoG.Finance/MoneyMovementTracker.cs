@@ -1,4 +1,5 @@
 ﻿using DiegoG.Finance.Internal;
+using MessagePack;
 using System.Collections;
 using System.Runtime.InteropServices;
 
@@ -8,7 +9,8 @@ public sealed class MoneyMovementTracker : PagedEntity<WorkSheetPage, MoneyMovem
 {
     private readonly List<MoneyMovementEntry> _list = [];
 
-    public readonly record struct Info(IEnumerable<MoneyMovementEntry.Info> Entries);
+    [MessagePackObject]
+    public readonly record struct Info([property: Key(0)] IEnumerable<MoneyMovementEntry.Info> Entries);
 
     public Info GetInfo()
         => new(_list.Select(x => x.GetInfo()));

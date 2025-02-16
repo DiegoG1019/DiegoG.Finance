@@ -1,7 +1,9 @@
-﻿using System.Numerics;
+﻿using MessagePack;
+using System.Numerics;
 
 namespace DiegoG.Finance;
 
+[MessagePackObject]
 public readonly record struct Percentage(decimal ValueOverHundred)
     : IEquatable<Percentage>, 
       IComparable<Percentage>,
@@ -10,7 +12,10 @@ public readonly record struct Percentage(decimal ValueOverHundred)
       IComparisonOperators<Percentage, Percentage, bool>,
       IComparisonOperators<Percentage, decimal, bool>
 {
+    [Key(0)]
     public decimal ValueOverHundred { get; } = ValueOverHundred;
+
+    [IgnoreMember]
     public decimal PercentageValue => ValueOverHundred * 100;
 
     public override string ToString()

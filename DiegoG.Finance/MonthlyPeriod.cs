@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MessagePack;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 namespace DiegoG.Finance;
 
 [StructLayout(LayoutKind.Explicit)]
+[MessagePackObject]
 public readonly struct MonthlyPeriod : IEquatable<MonthlyPeriod>, IComparable<MonthlyPeriod>
 {
     [FieldOffset(0)]
@@ -33,12 +35,15 @@ public readonly struct MonthlyPeriod : IEquatable<MonthlyPeriod>, IComparable<Mo
         this.Year = Year;
     }
 
+    [Key(0)]
     [field: FieldOffset(0)]
     public short Month { get; }
 
+    [Key(1)]
     [field: FieldOffset(2)]
     public short Year { get; }
 
+    [IgnoreMember]
     public DateTime Date => new(Year, Month, 1);
 
     public bool Equals(MonthlyPeriod other)
